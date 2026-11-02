@@ -10,6 +10,7 @@
  *  - Workouts are saved in this browser's localStorage.
  * ========================================================================= */
 
+const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
 const LEAD_IN = 5;      // seconds before the first work interval
 const WARN_SECS = 5;    // countdown beeps at the end of each interval
 const STORE_KEY = 'intervalTimer.v1';
@@ -208,22 +209,60 @@ function scheduleFrom(elapsed) {
 
 /* ---------------------------- wake lock -------------------------------- */
 
+/* Preferred: the Screen Wake Lock API (Chrome, Safari 16.4+, Firefox).
+ * Fallback: Android WebView browsers (DuckDuckGo, many in-app browsers)
+ * don't have it, but they keep the screen on while a video plays. So we loop
+ * a tiny black video. It has NO audio track, so it never takes audio focus
+ * and your music keeps playing. */
+
 let wakeLock = null;
+let wakeVideo = null;
+
+function getWakeVideo() {
+  if (wakeVideo) return wakeVideo;
+  const v = document.createElement('video');
+  v.setAttribute('playsinline', '');
+  v.setAttribute('aria-hidden', 'true');
+  v.loop = true;
+  v.preload = 'auto';
+  v.disableRemotePlayback = true;
+  v.className = 'wake-video';
+  for (const [src, type] of [['keepawake.webm', 'video/webm'], ['keepawake.mp4', 'video/mp4']]) {
+    const s = document.createElement('source');
+    s.src = src; s.type = type;
+    v.append(s);
+  }
+  document.body.append(v);
+  wakeVideo = v;
+  return v;
+}
+
+function startWakeVideo() {
+  const v = getWakeVideo();
+  if (!v.paused) return;
+  v.play().catch(() => {
+    // Some browsers block unmuted autoplay outside a tap; muted is always allowed.
+    v.muted = true;
+    v.play().catch(() => {});
+  });
+}
 
 async function requestWake() {
-  if (!('wakeLock' in navigator)) return;
-  try {
-    if (wakeLock && !wakeLock.released) return;
-    wakeLock = await navigator.wakeLock.request('screen');
-    wakeLock.addEventListener('release', () => { wakeLock = null; });
-  } catch (_) { /* denied, e.g. low battery */ }
+  if ('wakeLock' in navigator) {
+    try {
+      if (wakeLock && !wakeLock.released) return;
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => { wakeLock = null; });
+      return;
+    } catch (_) { /* denied or unavailable: fall through to video */ }
+  }
+  startWakeVideo();
 }
 
 function releaseWake() {
   if (wakeLock) { wakeLock.release().catch(() => {}); wakeLock = null; }
+  if (wakeVideo && !wakeVideo.paused) wakeVideo.pause();
 }
-
-if (!('wakeLock' in navigator)) $('wakeWarn').hidden = false;
 
 /* ---------------------------- run state -------------------------------- */
 
@@ -313,7 +352,7 @@ function finishRun() {
   const p = run.plan;
   stopRun();
   setPhaseClass('done');
-  $('doneStats').textContent = `${p.rounds} rounds · ${fmt(p.total)} total`;
+  $('doneStats').textContent = `${plural(p.rounds, 'round')} · ${fmt(p.total)} total`;
   show('done');
 }
 
@@ -366,7 +405,7 @@ function render() {
       $('phaseLabel').textContent = run.paused ? 'PAUSED' : 'GET READY';
       $('liftLabel').textContent = seg.next || 'Work';
       $('subLabel').textContent = 'First up';
-      $('roundLabel').textContent = `${p.rounds} rounds`;
+      $('roundLabel').textContent = plural(p.rounds, 'round');
     } else if (seg.type === 'work') {
       $('phaseLabel').textContent = run.paused ? 'PAUSED' : 'WORK';
       $('liftLabel').textContent = seg.lift;
@@ -412,7 +451,7 @@ function updateSummary() {
   const cycle = cfg.work + cfg.rest;
   const partial = plan.total % cycle !== 0;
   $('summary').innerHTML =
-    `<strong>${plan.rounds} rounds</strong> · ${fmt(plan.total)} + ${LEAD_IN}s lead-in` +
+    `<strong>${plural(plan.rounds, 'round')}</strong> · ${fmt(plan.total)} + ${LEAD_IN}s lead-in` +
     (partial ? ' · last interval is shortened to fit' : '');
 
   const ol = $('previewList');
@@ -507,6 +546,51 @@ $('deleteBtn').addEventListener('click', () => {
   renderSaved();
   flash(`Deleted “${w.name}”.`);
 });
+
+/* Backup: export/import saved workouts as a JSON file. Useful because
+ * browsers like DuckDuckGo can clear site data automatically. */
+$('exportBtn').addEventListener('click', () => {
+  if (!store.workouts.length) { flash('No saved workouts to export yet.'); return; }
+  const data = JSON.stringify({ app: 'interval-timer', version: 1, workouts: store.workouts }, null, 2);
+  const url = URL.createObjectURL(new Blob([data], { type: 'application/json' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `workouts-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  flash(`Exported ${store.workouts.length} workout(s).`);
+});
+
+$('importBtn').addEventListener('click', () => $('importFile').click());
+$('importFile').addEventListener('change', async (e) => {
+  const file = e.target.files && e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  try {
+    const data = JSON.parse(await file.text());
+    const list = Array.isArray(data) ? data : data.workouts;
+    if (!Array.isArray(list)) throw new Error('bad file');
+    let added = 0, updated = 0;
+    for (const w of list) {
+      if (!w || typeof w.name !== 'string' || !w.cfg) continue;
+      const cfg = { ...DEFAULT_CFG, ...w.cfg };
+      const existing = store.workouts.find((x) => x.name.toLowerCase() === w.name.toLowerCase());
+      if (existing) { existing.cfg = cfg; existing.updated = Date.now(); updated++; }
+      else {
+        store.workouts.push({ id: 'w' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: w.name, cfg, updated: Date.now() });
+        added++;
+      }
+    }
+    persist();
+    renderSaved();
+    flash(`Imported: ${added} new, ${updated} updated.`);
+  } catch (_) {
+    flash('That file isn\u2019t a workout export.');
+  }
+});
+
+// Ask the browser not to evict our storage (no prompt in most browsers).
+try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch (_) {}
 
 for (const id of ['totalMin', 'totalSec', 'work', 'rest', 'lifts']) {
   $(id).addEventListener('input', onFormChange);

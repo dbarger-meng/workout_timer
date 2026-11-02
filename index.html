@@ -36,6 +36,11 @@
       <input id="workoutName" type="text" placeholder="Workout name (e.g. Leg day)" maxlength="60" autocomplete="off">
       <button id="saveBtn" class="btn secondary small" type="button">Save</button>
     </div>
+    <div class="saved-controls backup">
+      <button id="exportBtn" class="btn ghost small" type="button">Export backup</button>
+      <button id="importBtn" class="btn ghost small" type="button">Import</button>
+      <input id="importFile" type="file" accept="application/json,.json" hidden>
+    </div>
     <p id="saveMsg" class="hint" aria-live="polite"></p>
   </section>
 
@@ -86,8 +91,6 @@
     </div>
     <p class="hint">Beeps mix over your music instead of pausing it. On iPhone the ringer/silent switch must be on (not silent) to hear them.</p>
   </section>
-
-  <p id="wakeWarn" class="warn" hidden>This browser can't keep the screen awake automatically. Turn off auto-lock in your device settings during workouts.</p>
 
   <div class="start-wrap">
     <button id="startBtn" class="btn primary big" type="button">Start</button>

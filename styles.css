@@ -158,3 +158,12 @@ body.phase-done .phase { color: #6fe0a2; }
 
 .run-controls { display: grid; grid-template-columns: 1fr 2fr; gap: 12px; margin-top: 16px; }
 .run-controls .btn { font-size: 1.25rem; padding: 18px; }
+
+.saved-controls.backup > .btn { flex: 1; }
+
+/* Keep-awake fallback video: must stay "on screen" for browsers to honour it. */
+.wake-video {
+  position: fixed; right: 0; bottom: 0;
+  width: 2px; height: 2px;
+  opacity: 0.01; pointer-events: none; z-index: -1;
+}

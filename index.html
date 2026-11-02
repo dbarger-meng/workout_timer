@@ -46,6 +46,10 @@
 
   <section class="card">
     <h2>Timing</h2>
+    <div class="mode-toggle" role="tablist" aria-label="Workout type">
+      <button id="modeInterval" class="mode-btn" type="button" role="tab" data-mode="interval">Intervals</button>
+      <button id="modeAmrap" class="mode-btn" type="button" role="tab" data-mode="amrap">AMRAP</button>
+    </div>
     <div class="grid3">
       <label class="field">
         <span>Total</span>
@@ -56,12 +60,12 @@
         </div>
         <small>min : sec</small>
       </label>
-      <label class="field">
+      <label class="field interval-only">
         <span>Work</span>
         <input id="work" type="number" inputmode="numeric" min="1" max="3600" value="40">
         <small>seconds</small>
       </label>
-      <label class="field">
+      <label class="field interval-only">
         <span>Rest</span>
         <input id="rest" type="number" inputmode="numeric" min="0" max="3600" value="20">
         <small>seconds</small>
@@ -72,10 +76,11 @@
 
   <section class="card">
     <h2>Lifts</h2>
-    <p class="hint">One per line. They're used in order for each work interval and repeat as a circuit if there are fewer lifts than rounds.</p>
+    <p class="hint interval-only">One per line. They're used in order for each work interval and repeat as a circuit if there are fewer lifts than rounds.</p>
+    <p class="hint amrap-only">One per line with reps, e.g. <b>Push-up x 5</b>. As many rounds as possible of the whole list before time runs out.</p>
     <textarea id="lifts" rows="6" placeholder="Goblet squat&#10;Push-ups&#10;Kettlebell swing&#10;Plank"></textarea>
     <details class="preview">
-      <summary>Preview rounds</summary>
+      <summary id="previewSummary">Preview rounds</summary>
       <ol id="previewList"></ol>
     </details>
   </section>
@@ -111,6 +116,13 @@
     <div id="subLabel" class="sub">&nbsp;</div>
     <svg id="moveFig" class="move-fig" aria-hidden="true"></svg>
     <p id="moveDesc" class="move-desc"></p>
+    <ul id="amrapList" class="amrap-list"></ul>
+  </div>
+
+  <div class="round-counter amrap-only">
+    <button id="roundMinus" class="btn ghost" type="button" aria-label="Remove a round">−</button>
+    <div class="rc-mid"><span id="roundCount">0</span><small>rounds done</small></div>
+    <button id="roundPlus" class="btn secondary" type="button" aria-label="Add a round">+1 round</button>
   </div>
 
   <div class="bar"><div id="segBar" class="bar-fill"></div></div>

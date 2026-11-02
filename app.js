@@ -19,7 +19,11 @@ const $ = (id) => document.getElementById(id);
 
 /* ---------------------------- storage ---------------------------------- */
 
+const DEFAULT_AMRAP = 'Push-up x 5\nOverhead press x 8\nBurpee x 10';
+
 const DEFAULT_CFG = {
+  mode: 'interval',
+  amrap: DEFAULT_AMRAP,
   totalMin: 20, totalSec: 0, work: 40, rest: 20,
   lifts: 'Goblet squat\nPush-ups\nKettlebell swing\nPlank',
 };
@@ -88,6 +92,16 @@ const PRESETS = [
     'High pull – alternating', 'Snatch – left', 'Snatch – right', 'Burpee') } },
 ];
 
+// AMRAP presets: as many rounds as possible in 20 minutes.
+const AMRAP20 = { mode: 'amrap', totalMin: 20, totalSec: 0, work: 40, rest: 20, lifts: '' };
+PRESETS.push(
+  { id: 'preset-amrap-1', name: 'KB AMRAP · Level 1', cfg: { ...AMRAP20, amrap: lines(
+    'Two-hand swing x 10', 'Goblet squat x 8', 'Push-up x 5', 'Bent-over row x 8', 'Dead bug x 6 / side') } },
+  { id: 'preset-amrap-2', name: 'KB AMRAP · Level 2', cfg: { ...AMRAP20, amrap: lines(
+    'Two-hand swing x 15', 'Goblet squat thruster x 10', 'Renegade row x 6 / side',
+    'Clean & press x 5 / side', 'Reverse lunge x 8 / side', 'Burpee x 8') } },
+);
+
 const findAny = (id) => store.workouts.find((w) => w.id === id) || PRESETS.find((w) => w.id === id);
 
 /* ---------------------------- config ----------------------------------- */
@@ -98,13 +112,32 @@ function int(v, min, max, fallback) {
   return Math.min(max, Math.max(min, n));
 }
 
+let mode = 'interval';
+
+function setMode(m) {
+  mode = m === 'amrap' ? 'amrap' : 'interval';
+  document.body.classList.toggle('mode-amrap', mode === 'amrap');
+  document.body.classList.toggle('mode-interval', mode === 'interval');
+  for (const b of document.querySelectorAll('.mode-btn')) {
+    const on = b.dataset.mode === mode;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-selected', on);
+  }
+  $('lifts').placeholder = mode === 'amrap'
+    ? 'Push-up x 5\nOverhead press x 8\nBurpee x 10'
+    : 'Goblet squat\nPush-ups\nKettlebell swing\nPlank';
+}
+
 function readForm() {
+  const text = $('lifts').value;
   return {
+    mode,
+    lifts: mode === 'interval' ? text : (store.current.lifts ?? DEFAULT_CFG.lifts),
+    amrap: mode === 'amrap' ? text : (store.current.amrap ?? DEFAULT_AMRAP),
     totalMin: int($('totalMin').value, 0, 180, 0),
     totalSec: int($('totalSec').value, 0, 59, 0),
     work: int($('work').value, 1, 3600, 40),
     rest: int($('rest').value, 0, 3600, 0),
-    lifts: $('lifts').value,
   };
 }
 
@@ -113,11 +146,23 @@ function writeForm(cfg) {
   $('totalSec').value = cfg.totalSec;
   $('work').value = cfg.work;
   $('rest').value = cfg.rest;
-  $('lifts').value = cfg.lifts;
+  setMode(cfg.mode);
+  $('lifts').value = mode === 'amrap' ? (cfg.amrap ?? DEFAULT_AMRAP) : cfg.lifts;
 }
 
 function parseLifts(text) {
   return String(text || '').split('\n').map((s) => s.trim()).filter(Boolean);
+}
+
+/* AMRAP lines: "Push-up x 5", "5 x Push-up", "10 burpees" or just a name. */
+function parseAmrap(text) {
+  return String(text || '').split('\n').map((s) => s.trim()).filter(Boolean).map((line) => {
+    let m = line.match(/^(.*?\S)\s*[x×*]\s*(\d.*)$/i);
+    if (m) return { name: m[1].trim(), qty: m[2].trim() };
+    m = line.match(/^(\d+\S*)\s*(?:[x×*]\s*)?(\D.*)$/i);
+    if (m) return { name: m[2].trim(), qty: m[1].trim() };
+    return { name: line, qty: '' };
+  });
 }
 
 /* Build the full timeline of segments for a config. Times are seconds from
@@ -126,6 +171,12 @@ function buildPlan(cfg) {
   const total = cfg.totalMin * 60 + cfg.totalSec;
   const lifts = parseLifts(cfg.lifts);
   const segs = [{ type: 'lead', start: 0, dur: LEAD_IN }];
+  if (cfg.mode === 'amrap') {
+    const items = parseAmrap(cfg.amrap);
+    if (total > 0) segs.push({ type: 'amrap', start: LEAD_IN, dur: total });
+    for (const s of segs) s.next = null;
+    return { segs, total, end: LEAD_IN + total, rounds: 0, lifts: [], amrap: items, mode: 'amrap' };
+  }
   let t = LEAD_IN;
   let used = 0;
   let round = 0;
@@ -166,7 +217,7 @@ function buildEvents(plan) {
       if (t > s.start + 0.01) ev.push({ t, kind: 'tick' });
     }
     const nxt = plan.segs[i + 1];
-    ev.push({ t: end, kind: !nxt ? 'finish' : nxt.type === 'work' ? 'go' : 'rest' });
+    ev.push({ t: end, kind: !nxt ? 'finish' : nxt.type === 'rest' ? 'rest' : 'go' });
   });
   return ev.sort((a, b) => a.t - b.t);
 }
@@ -349,6 +400,10 @@ function startRun(cfg) {
   if (plan.total <= 0) return;
   ensureAudio();
   run.plan = plan;
+  run.roundsDone = 0;
+  $('roundCount').textContent = '0';
+  document.body.classList.toggle('run-amrap', plan.mode === 'amrap');
+  renderAmrapList(plan.amrap || []);
   run.events = buildEvents(plan);
   run.active = true;
   run.paused = false;
@@ -394,8 +449,34 @@ function resumeRun() {
 
 const figure = new MoveFigure($('moveFig'));
 
+function renderAmrapList(items) {
+  const ul = $('amrapList');
+  ul.innerHTML = '';
+  ul.classList.toggle('dense', items.length > 6);
+  for (const it of items) {
+    const li = document.createElement('li');
+    const q = document.createElement('span');
+    q.className = 'qty';
+    q.textContent = it.qty ? `× ${it.qty}` : '';
+    const n = document.createElement('span');
+    n.className = 'name';
+    n.textContent = it.name;
+    li.append(n, q);
+    ul.append(li);
+  }
+}
+
+function bumpRounds(d) {
+  if (!run.active) return;
+  run.roundsDone = Math.max(0, (run.roundsDone || 0) + d);
+  $('roundCount').textContent = run.roundsDone;
+}
+$('roundPlus').addEventListener('click', () => bumpRounds(1));
+$('roundMinus').addEventListener('click', () => bumpRounds(-1));
+
 function stopRun() {
   figure.set(null);
+  document.body.classList.remove('run-amrap');
   run.active = false;
   run.paused = false;
   run.stopped = false;
@@ -409,9 +490,12 @@ function stopRun() {
 
 function finishRun() {
   const p = run.plan;
+  const rounds = p.mode === 'amrap' ? (run.roundsDone || 0) : p.rounds;
   stopRun();
   setPhaseClass('done');
-  $('doneStats').textContent = `${plural(p.rounds, 'round')} · ${fmt(p.total)} total`;
+  $('doneStats').textContent = p.mode === 'amrap'
+    ? `AMRAP ${fmt(p.total)} · ${plural(rounds, 'round')} completed`
+    : `${plural(rounds, 'round')} · ${fmt(p.total)} total`;
   show('done');
 }
 
@@ -451,7 +535,7 @@ function render() {
   const shown = Math.max(1, Math.ceil(segLeft - 1e-6));
   const key = seg.start + ':' + shown + ':' + run.paused + ':' + run.stopped;
   // Movement guide: current lift while working, the next one otherwise.
-  const moveName = seg.type === 'work' ? seg.lift : seg.next;
+  const moveName = p.mode === 'amrap' ? null : seg.type === 'work' ? seg.lift : seg.next;
   const move = moveName ? MOVES.find(moveName) : null;
   figure.set(move);
   $('moveDesc').textContent = move ? move.desc : '';
@@ -460,14 +544,17 @@ function render() {
 
   if (key !== run.lastShown) {
     run.lastShown = key;
-    setPhaseClass(seg.type);
+    setPhaseClass(seg.type === 'amrap' ? 'work' : seg.type);
     const big = $('bigTime');
-    big.textContent = shown >= 60 ? fmt(shown) : String(shown);
+    big.textContent = shown >= 60 || seg.type === 'amrap' ? fmt(shown) : String(shown);
     if (shown <= WARN_SECS && !run.paused) {
       big.classList.remove('warn-tick'); void big.offsetWidth; big.classList.add('warn-tick');
     }
 
-    if (seg.type === 'lead') {
+    if (p.mode === 'amrap') {
+      $('phaseLabel').textContent = label(seg.type === 'lead' ? 'GET READY' : 'AMRAP');
+      $('roundLabel').textContent = `AMRAP ${fmt(p.total)}`;
+    } else if (seg.type === 'lead') {
       $('phaseLabel').textContent = label('GET READY');
       $('liftLabel').textContent = seg.next || 'Work';
       $('subLabel').textContent = 'First up';
@@ -514,6 +601,22 @@ function updateSummary() {
     return;
   }
   $('startBtn').disabled = false;
+  $('previewSummary').textContent = cfg.mode === 'amrap' ? 'Preview list' : 'Preview rounds';
+  if (cfg.mode === 'amrap') {
+    $('summary').innerHTML = `<strong>AMRAP</strong> · ${fmt(plan.total)} + ${LEAD_IN}s lead-in · ${plural(plan.amrap.length, 'exercise')}`;
+    const ol = $('previewList');
+    ol.innerHTML = '';
+    for (const it of plan.amrap) {
+      const li = document.createElement('li');
+      const b = document.createElement('b');
+      b.textContent = it.name;
+      li.append(b, it.qty ? ` × ${it.qty}` : '');
+      const mv = MOVES.find(it.name);
+      if (mv) { const sm = document.createElement('small'); sm.textContent = mv.desc; li.append(sm); }
+      ol.append(li);
+    }
+    return;
+  }
   const cycle = cfg.work + cfg.rest;
   const partial = plan.total % cycle !== 0;
   $('summary').innerHTML =
@@ -555,7 +658,9 @@ function renderSaved() {
       const o = document.createElement('option');
       o.value = w.id;
       const t = w.cfg.totalMin * 60 + w.cfg.totalSec;
-      o.textContent = `${w.name} (${fmt(t)}, ${w.cfg.work}/${w.cfg.rest})`;
+      o.textContent = w.cfg.mode === 'amrap'
+        ? `${w.name} (AMRAP ${fmt(t)})`
+        : `${w.name} (${fmt(t)}, ${w.cfg.work}/${w.cfg.rest})`;
       g.append(o);
     }
     sel.append(g);
@@ -687,6 +792,17 @@ for (const id of ['totalMin', 'totalSec', 'work', 'rest', 'lifts']) {
 }
 for (const id of ['totalMin', 'totalSec', 'work', 'rest']) {
   $(id).addEventListener('focus', (e) => e.target.select());
+}
+
+for (const b of document.querySelectorAll('.mode-btn')) {
+  b.addEventListener('click', () => {
+    if (b.dataset.mode === mode) return;
+    store.current = readForm();      // keep the other list's text
+    store.current.mode = b.dataset.mode;
+    writeForm(store.current);
+    persist();
+    updateSummary();
+  });
 }
 
 $('volume').value = store.volume;

@@ -139,7 +139,7 @@ body.phase-rest .phase { color: #7fb3ff; }
 body.phase-done .phase { color: #6fe0a2; }
 
 .big-time {
-  font-size: min(42vw, 38vh);
+  font-size: min(38vw, 24vh);
   line-height: 1;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
@@ -169,3 +169,15 @@ body.phase-done .phase { color: #6fe0a2; }
 }
 
 .btn.danger { background: #c0392b; border-color: #c0392b; color: #fff; }
+
+/* Movement guide */
+.move-fig { width: min(46vw, 21vh); height: min(46vw, 21vh); margin-top: 6px; will-change: transform; transform: translateZ(0); }
+.fig-limb { fill: none; stroke: var(--text); stroke-width: 3.4; stroke-linecap: round; stroke-linejoin: round; }
+.fig-far { opacity: .45; }
+.fig-head { fill: var(--text); }
+.fig-ground { stroke: rgba(255,255,255,.25); stroke-width: 1; }
+.fig-bell circle { fill: var(--accent); }
+.fig-bell .fig-handle { fill: none; stroke: var(--accent); stroke-width: 1.6; }
+.move-desc { margin: 0; max-width: 30em; color: var(--text); opacity: .85; font-size: clamp(.95rem, 3.8vw, 1.1rem); line-height: 1.4; }
+.move-desc:empty { display: none; }
+.preview li small { display: block; color: var(--muted); font-size: .8rem; margin: 1px 0 4px; }

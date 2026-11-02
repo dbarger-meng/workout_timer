@@ -392,7 +392,10 @@ function resumeRun() {
   loop();
 }
 
+const figure = new MoveFigure($('moveFig'));
+
 function stopRun() {
+  figure.set(null);
   run.active = false;
   run.paused = false;
   run.stopped = false;
@@ -447,6 +450,12 @@ function render() {
   const segLeft = seg.start + seg.dur - el;
   const shown = Math.max(1, Math.ceil(segLeft - 1e-6));
   const key = seg.start + ':' + shown + ':' + run.paused + ':' + run.stopped;
+  // Movement guide: current lift while working, the next one otherwise.
+  const moveName = seg.type === 'work' ? seg.lift : seg.next;
+  const move = moveName ? MOVES.find(moveName) : null;
+  figure.set(move);
+  $('moveDesc').textContent = move ? move.desc : '';
+
   const label = (txt) => (run.stopped ? 'STOPPED' : run.paused ? 'PAUSED' : txt);
 
   if (key !== run.lastShown) {
@@ -519,6 +528,8 @@ function updateSummary() {
     const b = document.createElement('b');
     b.textContent = s.lift;
     li.append(b, ` — ${s.dur}s`);
+    const mv = MOVES.find(s.lift);
+    if (mv) { const sm = document.createElement('small'); sm.textContent = mv.desc; li.append(sm); }
     ol.append(li);
   }
 }

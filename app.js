@@ -90,6 +90,16 @@ const PRESETS = [
   { id: 'preset-cond-2', name: 'KB Swing Conditioning · Level 2', cfg: { ...L2, lifts: lines(
     'Two-hand swing', 'Goblet squat thruster', 'Single-arm swing – left', 'Single-arm swing – right',
     'High pull – alternating', 'Snatch – left', 'Snatch – right', 'Burpee') } },
+
+  // 5-move circuit from a workout card, both 40 s on / 20 s off for 20 minutes.
+  { id: 'preset-circuit5-1', name: 'KB 5-Move Circuit · Level 1', cfg: { ...L2, lifts: lines(
+    'Swings', 'Squat to press', 'Plank row', 'Deadlift', 'Reverse lunge & curl') } },
+  { id: 'preset-circuit5-2', name: 'KB 5-Move Circuit · Level 2', cfg: { ...L2, lifts: lines(
+    'Two-handed swing: Snap your hips and let the bell float to chest height.',
+    'Goblet squat: Hold the bell at your chest and squat to a controlled depth.',
+    'Single-arm row: Hinge forward and pull the bell to your hip.',
+    'Clean and press: Keep your core tight and avoid leaning back.',
+    'Reverse lunge: Hold the bell at your chest and alternate legs.') } },
 ];
 
 // AMRAP presets: as many rounds as possible in 20 minutes.
@@ -150,8 +160,14 @@ function writeForm(cfg) {
   $('lifts').value = mode === 'amrap' ? (cfg.amrap ?? DEFAULT_AMRAP) : cfg.lifts;
 }
 
+/* One lift per line. An optional cue can follow a colon:
+ *   "Goblet squat: Hold the bell at your chest and squat to depth." */
 function parseLifts(text) {
-  return String(text || '').split('\n').map((s) => s.trim()).filter(Boolean);
+  return String(text || '').split('\n').map((s) => s.trim()).filter(Boolean).map((line) => {
+    const i = line.indexOf(':');
+    if (i > 0 && i < line.length - 1) return { name: line.slice(0, i).trim(), cue: line.slice(i + 1).trim() };
+    return { name: line.replace(/:$/, '').trim(), cue: '' };
+  });
 }
 
 /* AMRAP lines: "Push-up x 5", "5 x Push-up", "10 burpees" or just a name. */
@@ -183,9 +199,9 @@ function buildPlan(cfg) {
 
   while (used < total) {
     round++;
-    const lift = lifts.length ? lifts[(round - 1) % lifts.length] : 'Work';
+    const item = lifts.length ? lifts[(round - 1) % lifts.length] : { name: 'Work', cue: '' };
     const w = Math.min(cfg.work, total - used);
-    segs.push({ type: 'work', start: t, dur: w, round, lift });
+    segs.push({ type: 'work', start: t, dur: w, round, lift: item.name, cue: item.cue });
     t += w; used += w;
     if (used >= total) break;
     const r = Math.min(cfg.rest, total - used);
@@ -200,6 +216,7 @@ function buildPlan(cfg) {
   for (let i = 0; i < segs.length; i++) {
     const next = segs.slice(i + 1).find((s) => s.type === 'work');
     segs[i].next = next ? next.lift : null;
+    segs[i].nextCue = next ? next.cue : '';
     segs[i].rounds = rounds;
   }
   // First "next" for lead-in is round 1.
@@ -536,9 +553,10 @@ function render() {
   const key = seg.start + ':' + shown + ':' + run.paused + ':' + run.stopped;
   // Movement guide: current lift while working, the next one otherwise.
   const moveName = p.mode === 'amrap' ? null : seg.type === 'work' ? seg.lift : seg.next;
+  const moveCue = seg.type === 'work' ? seg.cue : seg.nextCue;
   const move = moveName ? MOVES.find(moveName) : null;
   figure.set(move);
-  $('moveDesc').textContent = move ? move.desc : '';
+  $('moveDesc').textContent = p.mode === 'amrap' ? '' : (moveCue || (move ? move.desc : ''));
 
   const label = (txt) => (run.stopped ? 'STOPPED' : run.paused ? 'PAUSED' : txt);
 
@@ -632,7 +650,8 @@ function updateSummary() {
     b.textContent = s.lift;
     li.append(b, ` — ${s.dur}s`);
     const mv = MOVES.find(s.lift);
-    if (mv) { const sm = document.createElement('small'); sm.textContent = mv.desc; li.append(sm); }
+    const cue = s.cue || (mv ? mv.desc : '');
+    if (cue) { const sm = document.createElement('small'); sm.textContent = cue; li.append(sm); }
     ol.append(li);
   }
 }

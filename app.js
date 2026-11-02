@@ -46,6 +46,50 @@ function persist() {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (_) { /* ignore */ }
 }
 
+/* ---------------------------- presets ---------------------------------- */
+/* Built-in 20-minute kettlebell workouts, each in two intensity levels:
+ *   Level 1: 30 s work / 30 s rest, simpler moves
+ *   Level 2: 40 s work / 20 s rest, harder moves
+ * Both are 20 rounds. Presets are read-only; "Save" makes your own copy. */
+
+const L1 = { totalMin: 20, totalSec: 0, work: 30, rest: 30 };
+const L2 = { totalMin: 20, totalSec: 0, work: 40, rest: 20 };
+const lines = (...a) => a.join('\n');
+
+const PRESETS = [
+  { id: 'preset-full-1', name: 'KB Full Body · Level 1', cfg: { ...L1, lifts: lines(
+    'Two-hand swing', 'Goblet squat', 'Single-arm row – left', 'Single-arm row – right',
+    'Halo', 'Glute bridge', 'Push-up', 'Dead bug') } },
+  { id: 'preset-full-2', name: 'KB Full Body · Level 2', cfg: { ...L2, lifts: lines(
+    'Two-hand swing', 'Goblet squat', 'Clean & press – left', 'Clean & press – right',
+    'Renegade row', 'Reverse lunge – alternating', 'Push-up', 'Russian twist') } },
+
+  { id: 'preset-lower-1', name: 'KB Lower Body · Level 1', cfg: { ...L1, lifts: lines(
+    'Kettlebell deadlift', 'Goblet squat', 'Two-hand swing', 'Glute bridge',
+    'Reverse lunge – alternating', 'Sumo squat') } },
+  { id: 'preset-lower-2', name: 'KB Lower Body · Level 2', cfg: { ...L2, lifts: lines(
+    'Two-hand swing', 'Goblet squat', 'Single-leg deadlift – left', 'Single-leg deadlift – right',
+    'Goblet reverse lunge – alternating', 'Sumo deadlift high pull', 'Lateral lunge – alternating',
+    'Goblet squat pulse') } },
+
+  { id: 'preset-upper-1', name: 'KB Upper Body & Core · Level 1', cfg: { ...L1, lifts: lines(
+    'Floor press – left', 'Floor press – right', 'Bent-over row', 'Halo',
+    'Push-up', 'Plank', 'Bicep curl', 'Dead bug') } },
+  { id: 'preset-upper-2', name: 'KB Upper Body & Core · Level 2', cfg: { ...L2, lifts: lines(
+    'Clean & press – left', 'Clean & press – right', 'Renegade row', 'Push-up',
+    'Bent-over row – left', 'Bent-over row – right', 'Half get-up – alternating',
+    'Plank pull-through', 'Russian twist', 'Overhead press – alternating') } },
+
+  { id: 'preset-cond-1', name: 'KB Swing Conditioning · Level 1', cfg: { ...L1, lifts: lines(
+    'Two-hand swing', 'Goblet squat', 'Two-hand swing', 'Halo',
+    'Two-hand swing', 'Glute bridge') } },
+  { id: 'preset-cond-2', name: 'KB Swing Conditioning · Level 2', cfg: { ...L2, lifts: lines(
+    'Two-hand swing', 'Goblet squat thruster', 'Single-arm swing – left', 'Single-arm swing – right',
+    'High pull – alternating', 'Snatch – left', 'Snatch – right', 'Burpee') } },
+];
+
+const findAny = (id) => store.workouts.find((w) => w.id === id) || PRESETS.find((w) => w.id === id);
+
 /* ---------------------------- config ----------------------------------- */
 
 function int(v, min, max, fallback) {
@@ -269,6 +313,7 @@ function releaseWake() {
 const run = {
   active: false,
   paused: false,
+  stopped: false,
   plan: null,
   events: [],
   startPerf: 0,      // performance.now() when elapsed == 0
@@ -301,12 +346,14 @@ function fmt(secs) {
 
 function startRun(cfg) {
   const plan = buildPlan(cfg);
-  if (plan.total <= 0) { alert('Set a total time greater than 0.'); return; }
+  if (plan.total <= 0) return;
   ensureAudio();
   run.plan = plan;
   run.events = buildEvents(plan);
   run.active = true;
   run.paused = false;
+  run.stopped = false;
+  resetStopBtn();
   run.startPerf = performance.now();
   run.lastShown = null;
   scheduleFrom(0);
@@ -316,6 +363,11 @@ function startRun(cfg) {
   loop();
   clearInterval(run.timer);
   run.timer = setInterval(tick, 250);
+}
+
+function resetStopBtn() {
+  $('stopBtn').textContent = 'Stop';
+  $('stopBtn').classList.remove('danger');
 }
 
 function pauseRun() {
@@ -331,6 +383,8 @@ function resumeRun() {
   if (!run.active || !run.paused) return;
   ensureAudio();
   run.paused = false;
+  run.stopped = false;
+  resetStopBtn();
   run.startPerf = performance.now() - run.pausedAt * 1000;
   scheduleFrom(run.pausedAt);
   requestWake();
@@ -341,6 +395,8 @@ function resumeRun() {
 function stopRun() {
   run.active = false;
   run.paused = false;
+  run.stopped = false;
+  resetStopBtn();
   cancelScheduled();
   cancelAnimationFrame(run.raf);
   clearInterval(run.timer);
@@ -390,7 +446,8 @@ function render() {
 
   const segLeft = seg.start + seg.dur - el;
   const shown = Math.max(1, Math.ceil(segLeft - 1e-6));
-  const key = seg.start + ':' + shown + ':' + run.paused;
+  const key = seg.start + ':' + shown + ':' + run.paused + ':' + run.stopped;
+  const label = (txt) => (run.stopped ? 'STOPPED' : run.paused ? 'PAUSED' : txt);
 
   if (key !== run.lastShown) {
     run.lastShown = key;
@@ -402,17 +459,17 @@ function render() {
     }
 
     if (seg.type === 'lead') {
-      $('phaseLabel').textContent = run.paused ? 'PAUSED' : 'GET READY';
+      $('phaseLabel').textContent = label('GET READY');
       $('liftLabel').textContent = seg.next || 'Work';
       $('subLabel').textContent = 'First up';
       $('roundLabel').textContent = plural(p.rounds, 'round');
     } else if (seg.type === 'work') {
-      $('phaseLabel').textContent = run.paused ? 'PAUSED' : 'WORK';
+      $('phaseLabel').textContent = label('WORK');
       $('liftLabel').textContent = seg.lift;
       $('subLabel').textContent = seg.next && seg.round < p.rounds ? `Next: ${seg.next}` : 'Last one!';
       $('roundLabel').textContent = `Round ${seg.round} / ${p.rounds}`;
     } else {
-      $('phaseLabel').textContent = run.paused ? 'PAUSED' : 'REST';
+      $('phaseLabel').textContent = label('REST');
       $('liftLabel').textContent = seg.next ? `Up next: ${seg.next}` : 'Almost done';
       $('subLabel').textContent = seg.next ? `Round ${seg.round + 1} of ${p.rounds}` : 'Final rest';
       $('roundLabel').textContent = `Round ${seg.round} / ${p.rounds}`;
@@ -479,17 +536,25 @@ function renderSaved() {
   const blank = document.createElement('option');
   blank.value = ''; blank.textContent = '— New workout —';
   sel.append(blank);
-  const sorted = [...store.workouts].sort((a, b) => a.name.localeCompare(b.name));
-  for (const w of sorted) {
-    const o = document.createElement('option');
-    o.value = w.id;
-    const t = w.cfg.totalMin * 60 + w.cfg.totalSec;
-    o.textContent = `${w.name} (${fmt(t)}, ${w.cfg.work}/${w.cfg.rest})`;
-    sel.append(o);
-  }
-  if (!store.workouts.some((w) => w.id === store.selectedId)) store.selectedId = '';
+  const group = (label, list) => {
+    if (!list.length) return;
+    const g = document.createElement('optgroup');
+    g.label = label;
+    for (const w of list) {
+      const o = document.createElement('option');
+      o.value = w.id;
+      const t = w.cfg.totalMin * 60 + w.cfg.totalSec;
+      o.textContent = `${w.name} (${fmt(t)}, ${w.cfg.work}/${w.cfg.rest})`;
+      g.append(o);
+    }
+    sel.append(g);
+  };
+  group('My workouts', [...store.workouts].sort((a, b) => a.name.localeCompare(b.name)));
+  group('Kettlebell · 20 min', PRESETS);
+  if (!findAny(store.selectedId)) store.selectedId = '';
   sel.value = store.selectedId;
-  $('deleteBtn').disabled = !store.selectedId;
+  armDelete(false);
+  $('deleteBtn').disabled = !store.workouts.some((w) => w.id === store.selectedId);
   const cur = store.workouts.find((w) => w.id === store.selectedId);
   $('workoutName').value = cur ? cur.name : '';
   $('saveBtn').textContent = cur ? 'Update' : 'Save';
@@ -504,7 +569,7 @@ function flash(msg) {
 
 $('savedSelect').addEventListener('change', (e) => {
   store.selectedId = e.target.value;
-  const w = store.workouts.find((x) => x.id === store.selectedId);
+  const w = findAny(store.selectedId);
   if (w) { store.current = { ...DEFAULT_CFG, ...w.cfg }; writeForm(store.current); }
   persist();
   renderSaved();
@@ -537,9 +602,23 @@ $('saveBtn').addEventListener('click', () => {
   renderSaved();
 });
 
+// Browser pop-ups (confirm/alert) are blocked in some Android browsers such
+// as DuckDuckGo, so destructive actions use a second tap instead.
+let deleteArmed = 0;
+function armDelete(on) {
+  clearTimeout(deleteArmed);
+  deleteArmed = 0;
+  const b = $('deleteBtn');
+  b.textContent = on ? 'Confirm?' : 'Delete';
+  b.classList.toggle('danger', on);
+  if (on) deleteArmed = setTimeout(() => armDelete(false), 3000);
+}
+
 $('deleteBtn').addEventListener('click', () => {
   const w = store.workouts.find((x) => x.id === store.selectedId);
-  if (!w || !confirm(`Delete “${w.name}”?`)) return;
+  if (!w) return;
+  if (!deleteArmed) { armDelete(true); return; }
+  armDelete(false);
   store.workouts = store.workouts.filter((x) => x.id !== w.id);
   store.selectedId = '';
   persist();
@@ -616,11 +695,22 @@ $('testBtn').addEventListener('click', () => {
 
 $('startBtn').addEventListener('click', () => startRun(readForm()));
 $('pauseBtn').addEventListener('click', () => (run.paused ? resumeRun() : pauseRun()));
+// Stop halts the timer and turns into "Reset". Resume carries on; Reset
+// clears the run and goes back to the setup screen.
 $('stopBtn').addEventListener('click', () => {
-  const wasPaused = run.paused;
-  if (!wasPaused) pauseRun();
-  if (confirm('Stop this workout?')) { stopRun(); show('setup'); }
-  else if (!wasPaused) resumeRun();
+  if (!run.active) return;
+  if (!run.stopped) {
+    pauseRun();
+    run.stopped = true;
+    run.lastShown = null;
+    releaseWake();
+    $('stopBtn').textContent = 'Reset';
+    $('stopBtn').classList.add('danger');
+    render();
+  } else {
+    stopRun();
+    show('setup');
+  }
 });
 $('againBtn').addEventListener('click', () => { setPhaseClass(null); startRun(readForm()); });
 $('backBtn').addEventListener('click', () => { setPhaseClass(null); show('setup'); });

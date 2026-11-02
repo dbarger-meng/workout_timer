@@ -9,6 +9,8 @@ A phone-friendly interval timer for workouts (e.g. 20 minutes of 40 s on / 20 s 
 - **Plays over your music**: beeps use Web Audio with an "ambient" audio session, so Spotify keeps playing instead of pausing.
 - **Screen stays on** while the timer runs. Uses the Screen Wake Lock API where available; otherwise (e.g. DuckDuckGo and other Android WebView browsers) it loops a tiny silent video, which has no audio track so it can't interrupt your music.
 - **Saved workouts**: name and save setups, then load, update or delete them. They're kept in the browser on that device, with **Export backup / Import** to a JSON file.
+- **Kettlebell presets**: four 20-minute workouts (Full Body, Lower Body, Upper Body & Core, Swing Conditioning), each in two levels: *Level 1* 30 s on / 30 s off with simpler moves, *Level 2* 40 s on / 20 s off with harder moves.
+- **Stop → Reset**: Stop freezes the timer and the button turns into Reset. Resume carries on; Reset goes back to setup. (No pop-up dialogs, since some Android browsers block them.)
 - Works offline once loaded, and can be added to the home screen.
 
 ## Using it

@@ -167,3 +167,5 @@ body.phase-done .phase { color: #6fe0a2; }
   width: 2px; height: 2px;
   opacity: 0.01; pointer-events: none; z-index: -1;
 }
+
+.btn.danger { background: #c0392b; border-color: #c0392b; color: #fff; }

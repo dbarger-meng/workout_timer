@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#111418">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Intervals">
+  <title>Interval Timer</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ============ SETUP ============ -->
+<main id="setup" class="screen">
+  <header class="top">
+    <h1>Interval Timer</h1>
+  </header>
+
+  <section class="card">
+    <div class="row-between">
+      <h2>Saved workouts</h2>
+    </div>
+    <div class="saved-controls">
+      <select id="savedSelect" aria-label="Saved workouts">
+        <option value="">— New workout —</option>
+      </select>
+      <button id="deleteBtn" class="btn ghost small" type="button" disabled>Delete</button>
+    </div>
+    <div class="saved-controls">
+      <input id="workoutName" type="text" placeholder="Workout name (e.g. Leg day)" maxlength="60" autocomplete="off">
+      <button id="saveBtn" class="btn secondary small" type="button">Save</button>
+    </div>
+    <p id="saveMsg" class="hint" aria-live="polite"></p>
+  </section>
+
+  <section class="card">
+    <h2>Timing</h2>
+    <div class="grid3">
+      <label class="field">
+        <span>Total</span>
+        <div class="mmss">
+          <input id="totalMin" type="number" inputmode="numeric" min="0" max="180" value="20" aria-label="Total minutes">
+          <b>:</b>
+          <input id="totalSec" type="number" inputmode="numeric" min="0" max="59" value="0" aria-label="Total seconds">
+        </div>
+        <small>min : sec</small>
+      </label>
+      <label class="field">
+        <span>Work</span>
+        <input id="work" type="number" inputmode="numeric" min="1" max="3600" value="40">
+        <small>seconds</small>
+      </label>
+      <label class="field">
+        <span>Rest</span>
+        <input id="rest" type="number" inputmode="numeric" min="0" max="3600" value="20">
+        <small>seconds</small>
+      </label>
+    </div>
+    <p id="summary" class="summary"></p>
+  </section>
+
+  <section class="card">
+    <h2>Lifts</h2>
+    <p class="hint">One per line. They're used in order for each work interval and repeat as a circuit if there are fewer lifts than rounds.</p>
+    <textarea id="lifts" rows="6" placeholder="Goblet squat&#10;Push-ups&#10;Kettlebell swing&#10;Plank"></textarea>
+    <details class="preview">
+      <summary>Preview rounds</summary>
+      <ol id="previewList"></ol>
+    </details>
+  </section>
+
+  <section class="card">
+    <h2>Sound</h2>
+    <div class="sound-row">
+      <label class="field grow">
+        <span>Beep volume</span>
+        <input id="volume" type="range" min="0" max="1" step="0.05" value="0.8">
+      </label>
+      <button id="testBtn" class="btn ghost small" type="button">Test</button>
+    </div>
+    <p class="hint">Beeps mix over your music instead of pausing it. On iPhone the ringer/silent switch must be on (not silent) to hear them.</p>
+  </section>
+
+  <p id="wakeWarn" class="warn" hidden>This browser can't keep the screen awake automatically. Turn off auto-lock in your device settings during workouts.</p>
+
+  <div class="start-wrap">
+    <button id="startBtn" class="btn primary big" type="button">Start</button>
+  </div>
+</main>
+
+<!-- ============ RUNNING ============ -->
+<main id="run" class="screen" hidden>
+  <div class="run-top">
+    <span id="roundLabel">Get ready</span>
+    <span id="totalLeft">20:00 left</span>
+  </div>
+
+  <div class="run-center">
+    <div id="phaseLabel" class="phase">GET READY</div>
+    <div id="bigTime" class="big-time">5</div>
+    <div id="liftLabel" class="lift">&nbsp;</div>
+    <div id="subLabel" class="sub">&nbsp;</div>
+  </div>
+
+  <div class="bar"><div id="segBar" class="bar-fill"></div></div>
+  <div class="bar thin"><div id="totalBar" class="bar-fill"></div></div>
+
+  <div class="run-controls">
+    <button id="stopBtn" class="btn ghost" type="button">Stop</button>
+    <button id="pauseBtn" class="btn primary" type="button">Pause</button>
+  </div>
+</main>
+
+<!-- ============ DONE ============ -->
+<main id="done" class="screen" hidden>
+  <div class="run-center">
+    <div class="phase">DONE</div>
+    <div class="big-time small">Nice work</div>
+    <div id="doneStats" class="sub"></div>
+  </div>
+  <div class="run-controls">
+    <button id="againBtn" class="btn secondary" type="button">Again</button>
+    <button id="backBtn" class="btn primary" type="button">Back</button>
+  </div>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>

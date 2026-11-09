@@ -12,7 +12,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icon-192.png">
-  <link rel="stylesheet" href="styles.css?v=10">
+  <link rel="stylesheet" href="styles.css?v=11">
 </head>
 <body>
 
@@ -26,15 +26,15 @@
     <div class="row-between">
       <h2>Saved workouts</h2>
     </div>
+    <div id="levelToggle" class="mode-toggle level-toggle" role="tablist" aria-label="Intensity level">
+      <button class="level-btn" type="button" role="tab" data-level="1">Level 1</button>
+      <button class="level-btn" type="button" role="tab" data-level="2">Level 2</button>
+    </div>
     <div class="saved-controls">
       <select id="savedSelect" aria-label="Saved workouts">
         <option value="">— New workout —</option>
       </select>
       <button id="deleteBtn" class="btn ghost small" type="button" disabled>Delete</button>
-    </div>
-    <div id="levelToggle" class="mode-toggle level-toggle" role="tablist" aria-label="Intensity level">
-      <button class="level-btn" type="button" role="tab" data-level="1">Level 1</button>
-      <button class="level-btn" type="button" role="tab" data-level="2">Level 2</button>
     </div>
     <div class="saved-controls">
       <input id="workoutName" type="text" placeholder="Workout name (e.g. Leg day)" maxlength="60" autocomplete="off">
@@ -45,7 +45,6 @@
       <button id="importBtn" class="btn ghost small" type="button">Import</button>
       <input id="importFile" type="file" accept="application/json,.json" hidden>
     </div>
-    <p id="levelNote" class="hint"></p>
     <p id="saveMsg" class="hint" aria-live="polite"></p>
   </section>
 
@@ -107,7 +106,7 @@
   <div class="start-wrap">
     <button id="startBtn" class="btn primary big" type="button">Start</button>
   </div>
-  <p class="version">Version 10</p>
+  <p class="version">Version 11</p>
 </main>
 
 <!-- ============ RUNNING ============ -->
@@ -155,7 +154,7 @@
   </div>
 </main>
 
-<script src="moves.js?v=10"></script>
-<script src="app.js?v=10"></script>
+<script src="moves.js?v=11"></script>
+<script src="app.js?v=11"></script>
 </body>
 </html>

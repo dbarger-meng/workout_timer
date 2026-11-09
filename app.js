@@ -95,15 +95,14 @@ PRESETS.push(
     'Clean & press x 5 / side', 'Reverse lunge x 8 / side', 'Burpee x 8') } },
 );
 
-// Presets named "X · Level N" are grouped: one entry in the list, with a
-// Level 1 / Level 2 toggle to switch between them.
+// Presets named "X · Level N" get a base name and level; the Level 1 /
+// Level 2 toggle filters the list by level.
 for (const pr of PRESETS) {
   const m = pr.name.match(/^(.*?)\s*·\s*Level\s*(\d+)$/);
   pr.base = m ? m[1] : pr.name;
   pr.level = m ? Number(m[2]) : 0;
 }
 const presetGroup = (base) => PRESETS.filter((p) => p.base === base).sort((a, b) => a.level - b.level);
-const GROUP_PREFIX = 'group:';
 
 const findAny = (id) => store.workouts.find((w) => w.id === id) || PRESETS.find((w) => w.id === id);
 
@@ -790,42 +789,35 @@ function renderSaved() {
     sel.append(g);
   };
   group('My workouts', [...store.workouts].sort((a, b) => a.name.localeCompare(b.name)));
-  // One option per preset group; the level toggle picks the version.
-  const bases = [...new Set(PRESETS.map((p) => p.base))];
+  // Built-in presets, filtered by the Level 1 / Level 2 toggle. Presets
+  // without a level show under both.
+  const level = store.presetLevel === 2 ? 2 : 1;
+  const shown = PRESETS.filter((p) => !p.level || p.level === level);
   const pg = document.createElement('optgroup');
-  pg.label = 'Kettlebell · 20 min';
-  for (const base of bases) {
-    const first = presetGroup(base)[0];
+  pg.label = `Kettlebell · Level ${level}`;
+  for (const pr of shown) {
     const o = document.createElement('option');
-    o.value = GROUP_PREFIX + base;
-    const t = first.cfg.totalMin * 60 + first.cfg.totalSec;
-    o.textContent = (first.cfg.mode === 'amrap'
-      ? `${base} (AMRAP ${fmt(t)})`
-      : `${base} (${fmt(t)}, ${first.cfg.work}/${first.cfg.rest})`)
-      + (presetGroup(base).length > 1 ? ' · 2 levels' : '');
+    o.value = pr.id;
+    const t = pr.cfg.totalMin * 60 + pr.cfg.totalSec;
+    o.textContent = pr.cfg.mode === 'amrap'
+      ? `${pr.base} (AMRAP ${fmt(t)})`
+      : `${pr.base} (${fmt(t)}, ${pr.cfg.work}/${pr.cfg.rest})`;
     pg.append(o);
   }
   sel.append(pg);
 
   if (!findAny(store.selectedId)) store.selectedId = '';
-  const preset = PRESETS.find((p) => p.id === store.selectedId);
-  sel.value = preset ? GROUP_PREFIX + preset.base : store.selectedId;
+  // A preset from the other level isn't in the list: fall back to "New".
+  if (PRESETS.some((p) => p.id === store.selectedId) && !shown.some((p) => p.id === store.selectedId)) {
+    store.selectedId = '';
+  }
+  sel.value = store.selectedId;
 
-  // Level toggle is always shown. With a preset selected it shows (and
-  // switches) that preset's level; otherwise it sets the level used when
-  // you next pick a two-level preset.
-  const levels = preset ? presetGroup(preset.base) : [];
-  const activeLevel = preset && preset.level ? preset.level : (store.presetLevel || 1);
   for (const b of document.querySelectorAll('.level-btn')) {
-    const lvl = Number(b.dataset.level);
-    const on = lvl === activeLevel;
+    const on = Number(b.dataset.level) === level;
     b.classList.toggle('active', on);
     b.setAttribute('aria-selected', on);
-    b.disabled = !!preset && !levels.some((p) => p.level === lvl);
   }
-  $('levelNote').textContent = preset && levels.length < 2
-    ? `${preset.base} has one level only.`
-    : '';
   armDelete(false);
   $('deleteBtn').disabled = !store.workouts.some((w) => w.id === store.selectedId);
   const cur = store.workouts.find((w) => w.id === store.selectedId);
@@ -852,24 +844,19 @@ function selectPreset(id) {
 for (const b of document.querySelectorAll('.level-btn')) {
   b.addEventListener('click', () => {
     const lvl = Number(b.dataset.level);
+    if (lvl === store.presetLevel) return;
     store.presetLevel = lvl;
+    // If a preset is open and has a version at the new level, switch to it.
     const cur = PRESETS.find((p) => p.id === store.selectedId);
     const target = cur && presetGroup(cur.base).find((p) => p.level === lvl);
-    if (target && target.id !== cur.id) { selectPreset(target.id); return; }
+    if (target) { selectPreset(target.id); return; }
     persist();
     renderSaved();
   });
 }
 
 $('savedSelect').addEventListener('change', (e) => {
-  let id = e.target.value;
-  if (id.startsWith(GROUP_PREFIX)) {
-    // Open at the last level used (Level 1 by default) when it exists.
-    const grp = presetGroup(id.slice(GROUP_PREFIX.length));
-    const want = store.presetLevel || 1;
-    id = (grp.find((p) => p.level === want) || grp[0]).id;
-  }
-  store.selectedId = id;
+  store.selectedId = e.target.value;
   const w = findAny(store.selectedId);
   if (w) { store.current = { ...DEFAULT_CFG, ...w.cfg }; writeForm(store.current); }
   persist();

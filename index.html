@@ -76,9 +76,11 @@
 
   <section class="card">
     <h2>Lifts</h2>
-    <p class="hint interval-only">One per line. They're used in order for each work interval and repeat as a circuit if there are fewer lifts than rounds. Add your own cue after a colon, e.g. <b>Goblet squat: chest up, sit deep</b>.</p>
-    <p class="hint amrap-only">One per line with reps, e.g. <b>Push-up x 5</b>. As many rounds as possible of the whole list before time runs out.</p>
-    <textarea id="lifts" rows="6" placeholder="Goblet squat&#10;Push-ups&#10;Kettlebell swing&#10;Plank"></textarea>
+    <p class="hint interval-only">Used in order, one per work interval, and repeated as a circuit if there are fewer lifts than rounds. Add your own cue after a colon, e.g. <b>Goblet squat: chest up, sit deep</b>.</p>
+    <p class="hint amrap-only">Each exercise with its reps. As many rounds as possible of the whole list before time runs out.</p>
+    <textarea id="lifts" hidden aria-hidden="true"></textarea>
+    <div id="liftRows" class="lift-rows"></div>
+    <button id="addLift" class="btn ghost add-lift" type="button">+ Add lift</button>
     <details class="preview">
       <summary id="previewSummary">Preview rounds</summary>
       <ol id="previewList"></ol>

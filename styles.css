@@ -212,3 +212,12 @@ body.run-amrap .round-counter { display: grid; }
 .rc-mid small { color: var(--muted); font-size: .75rem; }
 body.run-amrap .run-center { overflow: hidden; }
 body.run-amrap #totalLeft { visibility: hidden; }
+
+/* ===== Lift rows ===== */
+.lift-rows { display: flex; flex-direction: column; gap: 8px; }
+.lift-row { display: flex; gap: 8px; align-items: center; }
+.lift-row .num { flex: none; width: 1.5em; text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; font-size: .9rem; }
+.lift-row .lift-name { flex: 1; }
+.lift-row .lift-reps { flex: none; width: 5.2em; text-align: center; }
+.icon-btn { flex: none; width: 44px; height: 44px; padding: 0; font-size: 1.4rem; line-height: 1; border-radius: 10px; }
+.add-lift { width: 100%; margin-top: 10px; padding: 12px; }

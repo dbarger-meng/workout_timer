@@ -115,9 +115,120 @@ function setMode(m) {
     b.classList.toggle('active', on);
     b.setAttribute('aria-selected', on);
   }
-  $('lifts').placeholder = mode === 'amrap'
-    ? 'Push-up x 5\nOverhead press x 8\nBurpee x 10'
-    : 'Goblet squat\nPush-ups\nKettlebell swing\nPlank';
+  $('addLift').textContent = mode === 'amrap' ? '+ Add exercise' : '+ Add lift';
+}
+
+/* ----- Lift rows: one input per lift, backed by the hidden #lifts text ----- */
+
+const EXAMPLES = {
+  interval: ['Goblet squat', 'Push-up', 'Kettlebell swing', 'Plank'],
+  amrap: [['Push-up', '5'], ['Overhead press', '8'], ['Burpee', '10']],
+};
+
+function renderLiftRows(focusIndex) {
+  const box = $('liftRows');
+  box.innerHTML = '';
+  const items = mode === 'amrap'
+    ? parseAmrap($('lifts').value).map((it) => [it.name, it.qty])
+    : String($('lifts').value || '').split('\n').map((s) => s.trim()).filter(Boolean).map((s) => [s, '']);
+  if (!items.length) items.push(['', '']);
+  items.forEach(([name, reps], i) => box.append(makeLiftRow(name, reps, i)));
+  renumberRows();
+  if (focusIndex != null) {
+    const r = box.children[Math.min(focusIndex, box.children.length - 1)];
+    if (r) r.querySelector('.lift-name').focus();
+  }
+}
+
+function makeLiftRow(name, reps, i) {
+  const row = document.createElement('div');
+  row.className = 'lift-row';
+
+  const num = document.createElement('span');
+  num.className = 'num';
+
+  const nameIn = document.createElement('input');
+  nameIn.type = 'text';
+  nameIn.className = 'lift-name';
+  nameIn.value = name;
+  nameIn.autocomplete = 'off';
+  nameIn.enterKeyHint = 'next';
+  nameIn.maxLength = 200;
+  const ex = mode === 'amrap' ? EXAMPLES.amrap[i % EXAMPLES.amrap.length][0] : EXAMPLES.interval[i % EXAMPLES.interval.length];
+  nameIn.placeholder = ex;
+  nameIn.setAttribute('aria-label', mode === 'amrap' ? 'Exercise' : 'Lift');
+  row.append(num, nameIn);
+
+  if (mode === 'amrap') {
+    const repsIn = document.createElement('input');
+    repsIn.type = 'text';
+    repsIn.className = 'lift-reps';
+    repsIn.value = reps;
+    repsIn.autocomplete = 'off';
+    repsIn.enterKeyHint = 'next';
+    repsIn.maxLength = 20;
+    repsIn.placeholder = 'reps';
+    repsIn.setAttribute('aria-label', 'Reps');
+    row.append(repsIn);
+  }
+
+  const del = document.createElement('button');
+  del.type = 'button';
+  del.className = 'btn ghost icon-btn';
+  del.textContent = '−';
+  del.setAttribute('aria-label', 'Remove');
+  del.addEventListener('click', () => removeRow(row));
+  row.append(del);
+
+  for (const inp of row.querySelectorAll('input')) {
+    inp.addEventListener('input', syncLifts);
+    inp.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (inp.classList.contains('lift-name') && row.querySelector('.lift-reps')) row.querySelector('.lift-reps').focus();
+        else addRow(row);
+      } else if (e.key === 'Backspace' && inp.classList.contains('lift-name') && !inp.value
+                 && !(row.querySelector('.lift-reps') || {}).value && $('liftRows').children.length > 1) {
+        e.preventDefault();
+        const prev = row.previousElementSibling || row.nextElementSibling;
+        removeRow(row);
+        if (prev) prev.querySelector('.lift-name').focus();
+      }
+    });
+  }
+  return row;
+}
+
+function renumberRows() {
+  [...$('liftRows').children].forEach((r, i) => { r.querySelector('.num').textContent = `${i + 1}.`; });
+}
+
+function addRow(after) {
+  const box = $('liftRows');
+  const row = makeLiftRow('', '', after ? [...box.children].indexOf(after) + 1 : box.children.length);
+  if (after && after.nextSibling) box.insertBefore(row, after.nextSibling); else box.append(row);
+  renumberRows();
+  row.querySelector('.lift-name').focus();
+}
+
+function removeRow(row) {
+  const box = $('liftRows');
+  if (box.children.length > 1) row.remove();
+  else for (const inp of row.querySelectorAll('input')) inp.value = '';
+  renumberRows();
+  syncLifts();
+}
+
+function syncLifts() {
+  const lines = [...$('liftRows').children].map((r) => {
+    const name = r.querySelector('.lift-name').value.trim();
+    const repsEl = r.querySelector('.lift-reps');
+    const reps = repsEl ? repsEl.value.trim() : '';
+    if (!name) return '';
+    return reps ? `${name} x ${reps}` : name;
+  }).filter(Boolean);
+  $('lifts').value = lines.join('\n');
+  onFormChange();
 }
 
 function readForm() {
@@ -140,6 +251,7 @@ function writeForm(cfg) {
   $('rest').value = cfg.rest;
   setMode(cfg.mode);
   $('lifts').value = mode === 'amrap' ? (cfg.amrap ?? DEFAULT_AMRAP) : cfg.lifts;
+  renderLiftRows();
 }
 
 /* One lift per line. An optional cue can follow a colon:
@@ -788,7 +900,9 @@ $('importFile').addEventListener('change', async (e) => {
 // Ask the browser not to evict our storage (no prompt in most browsers).
 try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch (_) {}
 
-for (const id of ['totalMin', 'totalSec', 'work', 'rest', 'lifts']) {
+$('addLift').addEventListener('click', () => addRow(null));
+
+for (const id of ['totalMin', 'totalSec', 'work', 'rest']) {
   $(id).addEventListener('input', onFormChange);
 }
 for (const id of ['totalMin', 'totalSec', 'work', 'rest']) {

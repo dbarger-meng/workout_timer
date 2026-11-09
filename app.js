@@ -38,10 +38,11 @@ function loadStore() {
         workouts: Array.isArray(s.workouts) ? s.workouts : [],
         selectedId: s.selectedId || '',
         volume: typeof s.volume === 'number' ? s.volume : 0.8,
+        presetLevel: s.presetLevel === 2 ? 2 : 1,
       };
     }
   } catch (_) { /* storage unavailable or corrupt */ }
-  return { current: { ...DEFAULT_CFG }, workouts: [], selectedId: '', volume: 0.8 };
+  return { current: { ...DEFAULT_CFG }, workouts: [], selectedId: '', volume: 0.8, presetLevel: 1 };
 }
 
 let store = loadStore();
@@ -93,6 +94,16 @@ PRESETS.push(
     'Two-hand swing x 15', 'Goblet squat thruster x 10', 'Renegade row x 6 / side',
     'Clean & press x 5 / side', 'Reverse lunge x 8 / side', 'Burpee x 8') } },
 );
+
+// Presets named "X · Level N" are grouped: one entry in the list, with a
+// Level 1 / Level 2 toggle to switch between them.
+for (const pr of PRESETS) {
+  const m = pr.name.match(/^(.*?)\s*·\s*Level\s*(\d+)$/);
+  pr.base = m ? m[1] : pr.name;
+  pr.level = m ? Number(m[2]) : 0;
+}
+const presetGroup = (base) => PRESETS.filter((p) => p.base === base).sort((a, b) => a.level - b.level);
+const GROUP_PREFIX = 'group:';
 
 const findAny = (id) => store.workouts.find((w) => w.id === id) || PRESETS.find((w) => w.id === id);
 
@@ -779,9 +790,34 @@ function renderSaved() {
     sel.append(g);
   };
   group('My workouts', [...store.workouts].sort((a, b) => a.name.localeCompare(b.name)));
-  group('Kettlebell · 20 min', PRESETS);
+  // One option per preset group; the level toggle picks the version.
+  const bases = [...new Set(PRESETS.map((p) => p.base))];
+  const pg = document.createElement('optgroup');
+  pg.label = 'Kettlebell · 20 min';
+  for (const base of bases) {
+    const first = presetGroup(base)[0];
+    const o = document.createElement('option');
+    o.value = GROUP_PREFIX + base;
+    const t = first.cfg.totalMin * 60 + first.cfg.totalSec;
+    o.textContent = first.cfg.mode === 'amrap'
+      ? `${base} (AMRAP ${fmt(t)})`
+      : `${base} (${fmt(t)}, ${first.cfg.work}/${first.cfg.rest})`;
+    pg.append(o);
+  }
+  sel.append(pg);
+
   if (!findAny(store.selectedId)) store.selectedId = '';
-  sel.value = store.selectedId;
+  const preset = PRESETS.find((p) => p.id === store.selectedId);
+  sel.value = preset ? GROUP_PREFIX + preset.base : store.selectedId;
+
+  const levels = preset ? presetGroup(preset.base) : [];
+  $('levelToggle').hidden = levels.length < 2;
+  for (const b of document.querySelectorAll('.level-btn')) {
+    const on = !!preset && Number(b.dataset.level) === preset.level;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-selected', on);
+    b.disabled = !levels.some((p) => p.level === Number(b.dataset.level));
+  }
   armDelete(false);
   $('deleteBtn').disabled = !store.workouts.some((w) => w.id === store.selectedId);
   const cur = store.workouts.find((w) => w.id === store.selectedId);
@@ -796,8 +832,36 @@ function flash(msg) {
   if (msg) flashTimer = setTimeout(() => { $('saveMsg').textContent = ''; }, 2500);
 }
 
+function selectPreset(id) {
+  store.selectedId = id;
+  const w = findAny(id);
+  if (w) { store.current = { ...DEFAULT_CFG, ...w.cfg }; writeForm(store.current); }
+  persist();
+  renderSaved();
+  updateSummary();
+}
+
+for (const b of document.querySelectorAll('.level-btn')) {
+  b.addEventListener('click', () => {
+    const cur = PRESETS.find((p) => p.id === store.selectedId);
+    if (!cur) return;
+    const lvl = Number(b.dataset.level);
+    const target = presetGroup(cur.base).find((p) => p.level === lvl);
+    if (!target || target.id === cur.id) return;
+    store.presetLevel = lvl;
+    selectPreset(target.id);
+  });
+}
+
 $('savedSelect').addEventListener('change', (e) => {
-  store.selectedId = e.target.value;
+  let id = e.target.value;
+  if (id.startsWith(GROUP_PREFIX)) {
+    // Open at the last level used (Level 1 by default) when it exists.
+    const grp = presetGroup(id.slice(GROUP_PREFIX.length));
+    const want = store.presetLevel || 1;
+    id = (grp.find((p) => p.level === want) || grp[0]).id;
+  }
+  store.selectedId = id;
   const w = findAny(store.selectedId);
   if (w) { store.current = { ...DEFAULT_CFG, ...w.cfg }; writeForm(store.current); }
   persist();

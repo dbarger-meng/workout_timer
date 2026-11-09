@@ -184,8 +184,8 @@ body.phase-done .phase { color: #6fe0a2; }
 
 /* ===== Mode toggle ===== */
 .mode-toggle { display: grid; grid-template-columns: 1fr 1fr; background: #12161b; border: 1px solid var(--line); border-radius: 12px; padding: 4px; margin-bottom: 14px; }
-.mode-btn { font: inherit; font-weight: 700; color: var(--muted); background: transparent; border: 0; border-radius: 9px; padding: 10px; cursor: pointer; }
-.mode-btn.active { background: var(--accent); color: #1a0d07; }
+.mode-btn, .level-btn { font: inherit; font-weight: 700; color: var(--muted); background: transparent; border: 0; border-radius: 9px; padding: 10px; cursor: pointer; }
+.mode-btn.active, .level-btn.active { background: var(--accent); color: #1a0d07; }
 body.mode-amrap .interval-only, body.mode-interval .amrap-only { display: none !important; }
 body.mode-amrap .grid3 { grid-template-columns: 1fr; }
 body.mode-amrap .grid3 .mmss { max-width: 220px; }
@@ -221,3 +221,4 @@ body.run-amrap #totalLeft { visibility: hidden; }
 .lift-row .lift-reps { flex: none; width: 5.2em; text-align: center; }
 .icon-btn { flex: none; width: 44px; height: 44px; padding: 0; font-size: 1.4rem; line-height: 1; border-radius: 10px; }
 .add-lift { width: 100%; margin-top: 10px; padding: 12px; }
+.level-toggle { margin: 0 0 8px; }

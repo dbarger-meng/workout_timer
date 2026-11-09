@@ -93,6 +93,22 @@ PRESETS.push(
   { id: 'preset-amrap-2', name: 'KB AMRAP · Level 2', cfg: { ...AMRAP20, amrap: lines(
     'Two-hand swing x 15', 'Goblet squat thruster x 10', 'Renegade row x 6 / side',
     'Clean & press x 5 / side', 'Reverse lunge x 8 / side', 'Burpee x 8') } },
+
+  // More Level 2 AMRAPs (20 min each).
+  { id: 'preset-amrap-fullbody-2', name: 'KB AMRAP Full Body · Level 2', cfg: { ...AMRAP20, amrap: lines(
+    'Two-hand swing x 20', 'Goblet squat x 12', 'Push-up x 10',
+    'Renegade row x 6 / side', 'Reverse lunge x 8 / side') } },
+  { id: 'preset-amrap-legs-2', name: 'KB AMRAP Legs · Level 2', cfg: { ...AMRAP20, amrap: lines(
+    'Two-hand swing x 20', 'Goblet squat x 15', 'Single-leg deadlift x 8 / side',
+    'Goblet reverse lunge x 10 / side', 'Sumo deadlift high pull x 12') } },
+  { id: 'preset-amrap-upper-2', name: 'KB AMRAP Upper & Core · Level 2', cfg: { ...AMRAP20, amrap: lines(
+    'Clean & press x 6 / side', 'Renegade row x 8 / side', 'Push-up x 12',
+    'Plank pull-through x 10', 'Russian twist x 20') } },
+  { id: 'preset-amrap-engine-2', name: 'KB AMRAP Engine · Level 2', cfg: { ...AMRAP20, amrap: lines(
+    'Single-arm swing x 10 / side', 'Goblet squat thruster x 10', 'High pull x 8 / side', 'Burpee x 10') } },
+  { id: 'preset-amrap-grind-2', name: 'KB AMRAP Grinder · Level 2', cfg: { ...AMRAP20, amrap: lines(
+    'Snatch x 5 / side', 'Half get-up x 2 / side', 'Kettlebell deadlift x 15',
+    'Goblet squat x 10', 'Push-up x 10') } },
 );
 
 // Presets named "X · Level N" get a base name and level; the Level 1 /

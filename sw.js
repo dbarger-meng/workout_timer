@@ -1,5 +1,5 @@
 // Offline cache so the timer works at the gym with poor signal.
-const CACHE = 'interval-timer-v12';
+const CACHE = 'interval-timer-v13';
 const ASSETS = ['./', 'index.html', 'styles.css', 'app.js', 'moves.js', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'keepawake.mp4', 'keepawake.webm'];
 
 self.addEventListener('install', (e) => {

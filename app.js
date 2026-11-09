@@ -788,11 +788,14 @@ function renderSaved() {
     }
     sel.append(g);
   };
-  group('My workouts', [...store.workouts].sort((a, b) => a.name.localeCompare(b.name)));
-  // Built-in presets, filtered by the Level 1 / Level 2 toggle. Presets
-  // without a level show under both.
+  // Only workouts of the current type (Intervals or AMRAP) are listed.
+  const modeOf = (w) => (w.cfg.mode === 'amrap' ? 'amrap' : 'interval');
+  const mine = store.workouts.filter((w) => modeOf(w) === mode);
+  group('My workouts', [...mine].sort((a, b) => a.name.localeCompare(b.name)));
+  // Built-in presets, also filtered by the Level 1 / Level 2 toggle.
+  // Presets without a level show under both.
   const level = store.presetLevel === 2 ? 2 : 1;
-  const shown = PRESETS.filter((p) => !p.level || p.level === level);
+  const shown = PRESETS.filter((p) => modeOf(p) === mode && (!p.level || p.level === level));
   const pg = document.createElement('optgroup');
   pg.label = `Kettlebell · Level ${level}`;
   for (const pr of shown) {
@@ -804,13 +807,10 @@ function renderSaved() {
       : `${pr.base} (${fmt(t)}, ${pr.cfg.work}/${pr.cfg.rest})`;
     pg.append(o);
   }
-  sel.append(pg);
+  if (shown.length) sel.append(pg);
 
-  if (!findAny(store.selectedId)) store.selectedId = '';
-  // A preset from the other level isn't in the list: fall back to "New".
-  if (PRESETS.some((p) => p.id === store.selectedId) && !shown.some((p) => p.id === store.selectedId)) {
-    store.selectedId = '';
-  }
+  // A workout that's filtered out (other type or level) can't stay selected.
+  if (![...mine, ...shown].some((w) => w.id === store.selectedId)) store.selectedId = '';
   sel.value = store.selectedId;
 
   for (const b of document.querySelectorAll('.level-btn')) {
@@ -975,6 +975,7 @@ for (const b of document.querySelectorAll('.mode-btn')) {
     store.current.mode = b.dataset.mode;
     writeForm(store.current);
     persist();
+    renderSaved();
     updateSummary();
   });
 }

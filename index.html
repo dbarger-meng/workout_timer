@@ -12,7 +12,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icon-192.png">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=10">
 </head>
 <body>
 
@@ -32,7 +32,7 @@
       </select>
       <button id="deleteBtn" class="btn ghost small" type="button" disabled>Delete</button>
     </div>
-    <div id="levelToggle" class="mode-toggle level-toggle" role="tablist" aria-label="Intensity level" hidden>
+    <div id="levelToggle" class="mode-toggle level-toggle" role="tablist" aria-label="Intensity level">
       <button class="level-btn" type="button" role="tab" data-level="1">Level 1</button>
       <button class="level-btn" type="button" role="tab" data-level="2">Level 2</button>
     </div>
@@ -45,6 +45,7 @@
       <button id="importBtn" class="btn ghost small" type="button">Import</button>
       <input id="importFile" type="file" accept="application/json,.json" hidden>
     </div>
+    <p id="levelNote" class="hint"></p>
     <p id="saveMsg" class="hint" aria-live="polite"></p>
   </section>
 
@@ -106,6 +107,7 @@
   <div class="start-wrap">
     <button id="startBtn" class="btn primary big" type="button">Start</button>
   </div>
+  <p class="version">Version 10</p>
 </main>
 
 <!-- ============ RUNNING ============ -->
@@ -153,7 +155,7 @@
   </div>
 </main>
 
-<script src="moves.js"></script>
-<script src="app.js"></script>
+<script src="moves.js?v=10"></script>
+<script src="app.js?v=10"></script>
 </body>
 </html>

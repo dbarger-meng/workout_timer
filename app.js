@@ -799,9 +799,10 @@ function renderSaved() {
     const o = document.createElement('option');
     o.value = GROUP_PREFIX + base;
     const t = first.cfg.totalMin * 60 + first.cfg.totalSec;
-    o.textContent = first.cfg.mode === 'amrap'
+    o.textContent = (first.cfg.mode === 'amrap'
       ? `${base} (AMRAP ${fmt(t)})`
-      : `${base} (${fmt(t)}, ${first.cfg.work}/${first.cfg.rest})`;
+      : `${base} (${fmt(t)}, ${first.cfg.work}/${first.cfg.rest})`)
+      + (presetGroup(base).length > 1 ? ' · 2 levels' : '');
     pg.append(o);
   }
   sel.append(pg);
@@ -810,14 +811,21 @@ function renderSaved() {
   const preset = PRESETS.find((p) => p.id === store.selectedId);
   sel.value = preset ? GROUP_PREFIX + preset.base : store.selectedId;
 
+  // Level toggle is always shown. With a preset selected it shows (and
+  // switches) that preset's level; otherwise it sets the level used when
+  // you next pick a two-level preset.
   const levels = preset ? presetGroup(preset.base) : [];
-  $('levelToggle').hidden = levels.length < 2;
+  const activeLevel = preset && preset.level ? preset.level : (store.presetLevel || 1);
   for (const b of document.querySelectorAll('.level-btn')) {
-    const on = !!preset && Number(b.dataset.level) === preset.level;
+    const lvl = Number(b.dataset.level);
+    const on = lvl === activeLevel;
     b.classList.toggle('active', on);
     b.setAttribute('aria-selected', on);
-    b.disabled = !levels.some((p) => p.level === Number(b.dataset.level));
+    b.disabled = !!preset && !levels.some((p) => p.level === lvl);
   }
+  $('levelNote').textContent = preset && levels.length < 2
+    ? `${preset.base} has one level only.`
+    : '';
   armDelete(false);
   $('deleteBtn').disabled = !store.workouts.some((w) => w.id === store.selectedId);
   const cur = store.workouts.find((w) => w.id === store.selectedId);
@@ -843,13 +851,13 @@ function selectPreset(id) {
 
 for (const b of document.querySelectorAll('.level-btn')) {
   b.addEventListener('click', () => {
-    const cur = PRESETS.find((p) => p.id === store.selectedId);
-    if (!cur) return;
     const lvl = Number(b.dataset.level);
-    const target = presetGroup(cur.base).find((p) => p.level === lvl);
-    if (!target || target.id === cur.id) return;
     store.presetLevel = lvl;
-    selectPreset(target.id);
+    const cur = PRESETS.find((p) => p.id === store.selectedId);
+    const target = cur && presetGroup(cur.base).find((p) => p.level === lvl);
+    if (target && target.id !== cur.id) { selectPreset(target.id); return; }
+    persist();
+    renderSaved();
   });
 }
 
@@ -1028,5 +1036,14 @@ renderSaved();
 updateSummary();
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+  // When a new version is deployed, the new service worker takes over;
+  // reload once so the page uses it (but never during a workout).
+  const hadController = !!navigator.serviceWorker.controller;
+  let reloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController || reloaded || run.active) return;
+    reloaded = true;
+    location.reload();
+  });
+  navigator.serviceWorker.register('sw.js').then((r) => r.update()).catch(() => {});
 }

@@ -9,12 +9,12 @@ A phone-friendly interval timer for workouts (e.g. 20 minutes of 40 s on / 20 s 
 - **Plays over your music**: beeps use Web Audio with an "ambient" audio session, so Spotify keeps playing instead of pausing.
 - **Screen stays on** while the timer runs. Uses the Screen Wake Lock API where available; otherwise (e.g. DuckDuckGo and other Android WebView browsers) it loops a tiny silent video, which has no audio track so it can't interrupt your music.
 - **Saved workouts**: name and save setups, then load, update or delete them. They're kept in the browser on that device, with **Export backup / Import** to a JSON file.
-- **Kettlebell presets**: four 20-minute workouts at 40 s on / 20 s off (Full Body, Lower Body, Upper Body & Core, Swing Conditioning).
+- **Interval presets** (20 min, 40 s on / 20 s off): Iron Circuit, Ground Shaker, Armor Up, Swing Shift, and Index Card (Level 1 and 2).
 - **AMRAP mode**: switch Timing to *AMRAP*, set the total time and add each exercise with its reps in its own row (Push-up 5, Overhead press 8, Burpee 10). The run screen shows a big countdown with the whole list underneath, plus a **+1 round** counter. Same 5 s lead-in, last-5-second beeps and finish chime. Two kettlebell AMRAP presets (Level 1 and Level 2, 20 min) are included.
 - **Intervals / AMRAP filter**: the workout list only shows workouts of the selected type (presets and your own).
-- **Level 1 / Level 2 toggle**: filters the built-in workouts to that level (Level 1: KB 5-Move Circuit, KB AMRAP; Level 2: all six). Switching level while a two-level workout is open loads its other version. Your own saved workouts always show.
-- **Level 2 AMRAP presets** (20 min): KB AMRAP, Full Body, Legs, Upper & Core, Engine, Grinder.
-- **KB 5-Move Circuit** presets (40 s on / 20 s off, 20 min). *Level 1*: Swings, Squat to press, Plank row, Deadlift, Reverse lunge & curl. *Level 2*: Two-handed swing, Goblet squat, Single-arm row, Clean and press, Reverse lunge.
+- **Level 1 / Level 2 toggle**: filters the built-in workouts to that level. Switching level while a two-level workout (Index Card, Open Throttle) is open loads its other version. Your own saved workouts always show.
+- **AMRAP presets** (20 min): Open Throttle (Level 1 and 2), plus Level 2 Head to Toe, Tree Trunks, Steel Spine, Red Line and Slow Burn.
+- **Index Card** presets (from a handwritten workout card) (40 s on / 20 s off, 20 min). *Level 1*: Swings, Squat to press, Plank row, Deadlift, Reverse lunge & curl. *Level 2*: Two-handed swing, Goblet squat, Single-arm row, Clean and press, Reverse lunge.
 - **Custom cues**: add your own coaching cue to any interval lift after a colon (`Goblet squat: chest up, sit deep`). It replaces the built-in description.
 - **Movement guides**: a looping stick-figure animation and a short form cue for each move. Work shows the current move; rest and the lead-in show the one coming up. Custom lift names are matched where possible (e.g. "KB swings", "Turkish get-up"); unknown moves just show the name. The round preview on the setup screen lists the cues too.
 - **Stop → Reset**: Stop freezes the timer and the button turns into Reset. Resume carries on; Reset goes back to setup. (No pop-up dialogs, since some Android browsers block them.)

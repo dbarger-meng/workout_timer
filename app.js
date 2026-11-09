@@ -59,25 +59,25 @@ const L2 = { totalMin: 20, totalSec: 0, work: 40, rest: 20 };
 const lines = (...a) => a.join('\n');
 
 const PRESETS = [
-  { id: 'preset-full-2', name: 'KB Full Body · Level 2', cfg: { ...L2, lifts: lines(
+  { id: 'preset-full-2', name: 'Iron Circuit · Level 2', cfg: { ...L2, lifts: lines(
     'Two-hand swing', 'Goblet squat', 'Clean & press – left', 'Clean & press – right',
     'Renegade row', 'Reverse lunge – alternating', 'Push-up', 'Russian twist') } },
-  { id: 'preset-lower-2', name: 'KB Lower Body · Level 2', cfg: { ...L2, lifts: lines(
+  { id: 'preset-lower-2', name: 'Ground Shaker · Level 2', cfg: { ...L2, lifts: lines(
     'Two-hand swing', 'Goblet squat', 'Single-leg deadlift – left', 'Single-leg deadlift – right',
     'Goblet reverse lunge – alternating', 'Sumo deadlift high pull', 'Lateral lunge – alternating',
     'Goblet squat pulse') } },
-  { id: 'preset-upper-2', name: 'KB Upper Body & Core · Level 2', cfg: { ...L2, lifts: lines(
+  { id: 'preset-upper-2', name: 'Armor Up · Level 2', cfg: { ...L2, lifts: lines(
     'Clean & press – left', 'Clean & press – right', 'Renegade row', 'Push-up',
     'Bent-over row – left', 'Bent-over row – right', 'Half get-up – alternating',
     'Plank pull-through', 'Russian twist', 'Overhead press – alternating') } },
-  { id: 'preset-cond-2', name: 'KB Swing Conditioning · Level 2', cfg: { ...L2, lifts: lines(
+  { id: 'preset-cond-2', name: 'Swing Shift · Level 2', cfg: { ...L2, lifts: lines(
     'Two-hand swing', 'Goblet squat thruster', 'Single-arm swing – left', 'Single-arm swing – right',
     'High pull – alternating', 'Snatch – left', 'Snatch – right', 'Burpee') } },
 
   // 5-move circuit from a workout card, both 40 s on / 20 s off for 20 minutes.
-  { id: 'preset-circuit5-1', name: 'KB 5-Move Circuit · Level 1', cfg: { ...L2, lifts: lines(
+  { id: 'preset-circuit5-1', name: 'Index Card · Level 1', cfg: { ...L2, lifts: lines(
     'Swings', 'Squat to press', 'Plank row', 'Deadlift', 'Reverse lunge & curl') } },
-  { id: 'preset-circuit5-2', name: 'KB 5-Move Circuit · Level 2', cfg: { ...L2, lifts: lines(
+  { id: 'preset-circuit5-2', name: 'Index Card · Level 2', cfg: { ...L2, lifts: lines(
     'Two-handed swing: Snap your hips and let the bell float to chest height.',
     'Goblet squat: Hold the bell at your chest and squat to a controlled depth.',
     'Single-arm row: Hinge forward and pull the bell to your hip.',
@@ -88,25 +88,25 @@ const PRESETS = [
 // AMRAP presets: as many rounds as possible in 20 minutes.
 const AMRAP20 = { mode: 'amrap', totalMin: 20, totalSec: 0, work: 40, rest: 20, lifts: '' };
 PRESETS.push(
-  { id: 'preset-amrap-1', name: 'KB AMRAP · Level 1', cfg: { ...AMRAP20, amrap: lines(
+  { id: 'preset-amrap-1', name: 'Open Throttle · Level 1', cfg: { ...AMRAP20, amrap: lines(
     'Two-hand swing x 10', 'Goblet squat x 8', 'Push-up x 5', 'Bent-over row x 8', 'Dead bug x 6 / side') } },
-  { id: 'preset-amrap-2', name: 'KB AMRAP · Level 2', cfg: { ...AMRAP20, amrap: lines(
+  { id: 'preset-amrap-2', name: 'Open Throttle · Level 2', cfg: { ...AMRAP20, amrap: lines(
     'Two-hand swing x 15', 'Goblet squat thruster x 10', 'Renegade row x 6 / side',
     'Clean & press x 5 / side', 'Reverse lunge x 8 / side', 'Burpee x 8') } },
 
   // More Level 2 AMRAPs (20 min each).
-  { id: 'preset-amrap-fullbody-2', name: 'KB AMRAP Full Body · Level 2', cfg: { ...AMRAP20, amrap: lines(
+  { id: 'preset-amrap-fullbody-2', name: 'Head to Toe · Level 2', cfg: { ...AMRAP20, amrap: lines(
     'Two-hand swing x 20', 'Goblet squat x 12', 'Push-up x 10',
     'Renegade row x 6 / side', 'Reverse lunge x 8 / side') } },
-  { id: 'preset-amrap-legs-2', name: 'KB AMRAP Legs · Level 2', cfg: { ...AMRAP20, amrap: lines(
+  { id: 'preset-amrap-legs-2', name: 'Tree Trunks · Level 2', cfg: { ...AMRAP20, amrap: lines(
     'Two-hand swing x 20', 'Goblet squat x 15', 'Single-leg deadlift x 8 / side',
     'Goblet reverse lunge x 10 / side', 'Sumo deadlift high pull x 12') } },
-  { id: 'preset-amrap-upper-2', name: 'KB AMRAP Upper & Core · Level 2', cfg: { ...AMRAP20, amrap: lines(
+  { id: 'preset-amrap-upper-2', name: 'Steel Spine · Level 2', cfg: { ...AMRAP20, amrap: lines(
     'Clean & press x 6 / side', 'Renegade row x 8 / side', 'Push-up x 12',
     'Plank pull-through x 10', 'Russian twist x 20') } },
-  { id: 'preset-amrap-engine-2', name: 'KB AMRAP Engine · Level 2', cfg: { ...AMRAP20, amrap: lines(
+  { id: 'preset-amrap-engine-2', name: 'Red Line · Level 2', cfg: { ...AMRAP20, amrap: lines(
     'Single-arm swing x 10 / side', 'Goblet squat thruster x 10', 'High pull x 8 / side', 'Burpee x 10') } },
-  { id: 'preset-amrap-grind-2', name: 'KB AMRAP Grinder · Level 2', cfg: { ...AMRAP20, amrap: lines(
+  { id: 'preset-amrap-grind-2', name: 'Slow Burn · Level 2', cfg: { ...AMRAP20, amrap: lines(
     'Snatch x 5 / side', 'Half get-up x 2 / side', 'Kettlebell deadlift x 15',
     'Goblet squat x 10', 'Push-up x 10') } },
 );
@@ -798,7 +798,7 @@ function renderSaved() {
       o.value = w.id;
       const t = w.cfg.totalMin * 60 + w.cfg.totalSec;
       o.textContent = w.cfg.mode === 'amrap'
-        ? `${w.name} (AMRAP ${fmt(t)})`
+        ? `${w.name} (${fmt(t)})`
         : `${w.name} (${fmt(t)}, ${w.cfg.work}/${w.cfg.rest})`;
       g.append(o);
     }
@@ -813,13 +813,13 @@ function renderSaved() {
   const level = store.presetLevel === 2 ? 2 : 1;
   const shown = PRESETS.filter((p) => modeOf(p) === mode && (!p.level || p.level === level));
   const pg = document.createElement('optgroup');
-  pg.label = `Kettlebell · Level ${level}`;
+  pg.label = `Level ${level}`;
   for (const pr of shown) {
     const o = document.createElement('option');
     o.value = pr.id;
     const t = pr.cfg.totalMin * 60 + pr.cfg.totalSec;
     o.textContent = pr.cfg.mode === 'amrap'
-      ? `${pr.base} (AMRAP ${fmt(t)})`
+      ? `${pr.base} (${fmt(t)})`
       : `${pr.base} (${fmt(t)}, ${pr.cfg.work}/${pr.cfg.rest})`;
     pg.append(o);
   }

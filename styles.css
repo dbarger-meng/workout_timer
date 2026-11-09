@@ -355,3 +355,15 @@ body.phase-done .phase { color: var(--gold); }
 .fig-bell .fig-handle { stroke: var(--ember); }
 .amrap-list .qty { color: #ffb36b; }
 .amrap-list li { border-bottom-color: rgba(255, 150, 80, .14); }
+
+/* Finish-screen quote */
+.quote { margin: 18px 0 0; max-width: 30em; padding: 18px 18px 14px; border: 1px solid var(--line); border-radius: 14px;
+  background: rgba(20, 10, 7, .55); box-shadow: 0 0 24px rgba(255, 120, 40, .12); }
+.quote blockquote { margin: 0; font-family: var(--display); font-size: clamp(1.05rem, 4.6vw, 1.35rem); line-height: 1.45; color: var(--text); }
+.quote blockquote::before { content: "\201C"; color: var(--ember); margin-right: 2px; }
+.quote blockquote::after { content: "\201D"; color: var(--ember); margin-left: 2px; }
+.quote figcaption { margin-top: 10px; color: var(--gold); font-family: var(--display); letter-spacing: .08em; font-size: .9rem; }
+.quote .btn { margin-top: 12px; }
+#done .run-center { overflow-y: auto; }
+.check-row { display: flex; gap: 10px; align-items: center; margin: 4px 0 10px; font-size: .95rem; }
+.check-row input { width: 22px; height: 22px; accent-color: var(--ember); flex: none; }

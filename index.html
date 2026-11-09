@@ -15,7 +15,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icon-192.png">
-  <link rel="stylesheet" href="styles.css?v=15">
+  <link rel="stylesheet" href="styles.css?v=16">
 </head>
 <body>
 
@@ -104,13 +104,17 @@
       </label>
       <button id="testBtn" class="btn ghost small" type="button">Test</button>
     </div>
+    <label class="check-row">
+      <input id="quoteVoice" type="checkbox" checked>
+      <span>Speak a Stephen Hawking quote at the end</span>
+    </label>
     <p class="hint">Beeps mix over your music instead of pausing it. On iPhone the ringer/silent switch must be on (not silent) to hear them.</p>
   </section>
 
   <div class="start-wrap">
     <button id="startBtn" class="btn primary big" type="button">Start</button>
   </div>
-  <p class="version">Version 15</p>
+  <p class="version">Version 16</p>
 </main>
 
 <!-- ============ RUNNING ============ -->
@@ -151,6 +155,11 @@
     <div class="phase">DONE</div>
     <div class="big-time small">Nice work</div>
     <div id="doneStats" class="sub"></div>
+    <figure id="quoteBox" class="quote" hidden>
+      <blockquote id="quoteText"></blockquote>
+      <figcaption>— Stephen Hawking</figcaption>
+      <button id="quoteReplay" class="btn ghost small" type="button">▶ Hear it again</button>
+    </figure>
   </div>
   <div class="run-controls">
     <button id="againBtn" class="btn secondary" type="button">Again</button>
@@ -158,7 +167,7 @@
   </div>
 </main>
 
-<script src="moves.js?v=15"></script>
-<script src="app.js?v=15"></script>
+<script src="moves.js?v=16"></script>
+<script src="app.js?v=16"></script>
 </body>
 </html>

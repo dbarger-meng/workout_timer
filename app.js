@@ -39,6 +39,8 @@ function loadStore() {
         selectedId: s.selectedId || '',
         volume: typeof s.volume === 'number' ? s.volume : 0.8,
         presetLevel: s.presetLevel === 2 ? 2 : 1,
+        quoteVoice: s.quoteVoice !== false,
+        lastQuote: typeof s.lastQuote === 'string' ? s.lastQuote : '',
       };
     }
   } catch (_) { /* storage unavailable or corrupt */ }
@@ -537,6 +539,7 @@ function startRun(cfg) {
   if (plan.total <= 0) return;
   ensureAudio();
   run.plan = plan;
+  preloadQuote();
   run.roundsDone = 0;
   $('roundCount').textContent = '0';
   document.body.classList.toggle('run-amrap', plan.mode === 'amrap');
@@ -626,6 +629,67 @@ function stopRun() {
   setPhaseClass(null);
 }
 
+/* ---------------------------- finish quote ----------------------------- */
+// Real Stephen Hawking quotes. The audio clips (quotes/*.mp3) were made with
+// the DECtalk "Perfect Paul" voice and say "Workout complete." first.
+const HAWKING_QUOTES = [
+  { id: 'stars', text: 'Remember to look up at the stars and not down at your feet. Be curious.' },
+  { id: 'giveup', text: 'However difficult life may seem, there is always something you can do and succeed at. It matters that you don\u2019t just give up.' },
+  { id: 'work', text: 'Work gives you meaning and purpose, and life is empty without it.' },
+  { id: 'funny', text: 'Life would be tragic if it weren\u2019t funny.' },
+  { id: 'monkeys', text: 'We are just an advanced breed of monkeys on a minor planet of a very average star. But we can understand the Universe. That makes us something very special.' },
+  { id: 'goal', text: 'My goal is simple. It is a complete understanding of the universe, why it is as it is and why it exists at all.' },
+];
+
+const quote = { pick: null, buffer: null, loading: null, src: null };
+
+function pickQuote() {
+  let q;
+  do { q = HAWKING_QUOTES[Math.floor(Math.random() * HAWKING_QUOTES.length)]; }
+  while (HAWKING_QUOTES.length > 1 && store.lastQuote === q.id);
+  store.lastQuote = q.id;
+  persist();
+  return q;
+}
+
+// Load and decode the clip at the start of the workout so it's ready
+// (and cached for offline) by the end.
+function preloadQuote() {
+  loadQuote(pickQuote());
+}
+
+function loadQuote(pick) {
+  stopQuote();
+  quote.pick = pick;
+  quote.buffer = null;
+  if (!ctx || store.quoteVoice === false) { quote.loading = null; return; }
+  quote.loading = fetch(`quotes/${pick.id}.mp3`)
+    .then((r) => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
+    .then((ab) => new Promise((res, rej) => ctx.decodeAudioData(ab, res, rej)))
+    .then((buf) => { if (quote.pick === pick) quote.buffer = buf; return buf; })
+    .catch(() => null);
+}
+
+// Played through Web Audio (like the beeps) so it mixes over music.
+function playQuote(delay = 0) {
+  if (!ctx || !quote.loading) return;
+  quote.loading.then((buf) => {
+    if (!buf || $('done').hidden) return;
+    stopQuote();
+    if (ctx.state !== 'running') ctx.resume().catch(() => {});
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(master);
+    src.start(ctx.currentTime + delay);
+    src.onended = () => { if (quote.src === src) quote.src = null; };
+    quote.src = src;
+  });
+}
+
+function stopQuote() {
+  if (quote.src) { try { quote.src.stop(); } catch (_) {} quote.src = null; }
+}
+
 function finishRun() {
   const p = run.plan;
   const rounds = p.mode === 'amrap' ? (run.roundsDone || 0) : p.rounds;
@@ -634,7 +698,13 @@ function finishRun() {
   $('doneStats').textContent = p.mode === 'amrap'
     ? `AMRAP ${fmt(p.total)} · ${plural(rounds, 'round')} completed`
     : `${plural(rounds, 'round')} · ${fmt(p.total)} total`;
+  const q = quote.pick || pickQuote();
+  $('quoteText').textContent = q.text;
+  $('quoteBox').hidden = false;
+  $('quoteReplay').hidden = store.quoteVoice === false;
   show('done');
+  // Let the finish chime ring out first.
+  if (store.quoteVoice !== false) playQuote(1.4);
 }
 
 function loop() {
@@ -1031,8 +1101,15 @@ $('stopBtn').addEventListener('click', () => {
     show('setup');
   }
 });
-$('againBtn').addEventListener('click', () => { setPhaseClass(null); startRun(readForm()); });
-$('backBtn').addEventListener('click', () => { setPhaseClass(null); show('setup'); });
+$('againBtn').addEventListener('click', () => { stopQuote(); setPhaseClass(null); startRun(readForm()); });
+$('backBtn').addEventListener('click', () => { stopQuote(); setPhaseClass(null); show('setup'); });
+$('quoteReplay').addEventListener('click', () => {
+  ensureAudio();
+  if (!quote.loading && quote.pick) loadQuote(quote.pick);
+  playQuote(0.05);
+});
+$('quoteVoice').checked = store.quoteVoice !== false;
+$('quoteVoice').addEventListener('change', (e) => { store.quoteVoice = e.target.checked; persist(); });
 
 /* ---------------------------- init ------------------------------------- */
 

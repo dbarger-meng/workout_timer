@@ -51,42 +51,24 @@ function persist() {
 }
 
 /* ---------------------------- presets ---------------------------------- */
-/* Built-in 20-minute kettlebell workouts, each in two intensity levels:
- *   Level 1: 30 s work / 30 s rest, simpler moves
- *   Level 2: 40 s work / 20 s rest, harder moves
- * Both are 20 rounds. Presets are read-only; "Save" makes your own copy. */
+/* Built-in 20-minute kettlebell workouts, all 40 s work / 20 s rest
+ * (20 rounds). Presets are read-only; "Save" makes your own copy. */
 
-const L1 = { totalMin: 20, totalSec: 0, work: 30, rest: 30 };
 const L2 = { totalMin: 20, totalSec: 0, work: 40, rest: 20 };
 const lines = (...a) => a.join('\n');
 
 const PRESETS = [
-  { id: 'preset-full-1', name: 'KB Full Body · Level 1', cfg: { ...L1, lifts: lines(
-    'Two-hand swing', 'Goblet squat', 'Single-arm row – left', 'Single-arm row – right',
-    'Halo', 'Glute bridge', 'Push-up', 'Dead bug') } },
   { id: 'preset-full-2', name: 'KB Full Body · Level 2', cfg: { ...L2, lifts: lines(
     'Two-hand swing', 'Goblet squat', 'Clean & press – left', 'Clean & press – right',
     'Renegade row', 'Reverse lunge – alternating', 'Push-up', 'Russian twist') } },
-
-  { id: 'preset-lower-1', name: 'KB Lower Body · Level 1', cfg: { ...L1, lifts: lines(
-    'Kettlebell deadlift', 'Goblet squat', 'Two-hand swing', 'Glute bridge',
-    'Reverse lunge – alternating', 'Sumo squat') } },
   { id: 'preset-lower-2', name: 'KB Lower Body · Level 2', cfg: { ...L2, lifts: lines(
     'Two-hand swing', 'Goblet squat', 'Single-leg deadlift – left', 'Single-leg deadlift – right',
     'Goblet reverse lunge – alternating', 'Sumo deadlift high pull', 'Lateral lunge – alternating',
     'Goblet squat pulse') } },
-
-  { id: 'preset-upper-1', name: 'KB Upper Body & Core · Level 1', cfg: { ...L1, lifts: lines(
-    'Floor press – left', 'Floor press – right', 'Bent-over row', 'Halo',
-    'Push-up', 'Plank', 'Bicep curl', 'Dead bug') } },
   { id: 'preset-upper-2', name: 'KB Upper Body & Core · Level 2', cfg: { ...L2, lifts: lines(
     'Clean & press – left', 'Clean & press – right', 'Renegade row', 'Push-up',
     'Bent-over row – left', 'Bent-over row – right', 'Half get-up – alternating',
     'Plank pull-through', 'Russian twist', 'Overhead press – alternating') } },
-
-  { id: 'preset-cond-1', name: 'KB Swing Conditioning · Level 1', cfg: { ...L1, lifts: lines(
-    'Two-hand swing', 'Goblet squat', 'Two-hand swing', 'Halo',
-    'Two-hand swing', 'Glute bridge') } },
   { id: 'preset-cond-2', name: 'KB Swing Conditioning · Level 2', cfg: { ...L2, lifts: lines(
     'Two-hand swing', 'Goblet squat thruster', 'Single-arm swing – left', 'Single-arm swing – right',
     'High pull – alternating', 'Snatch – left', 'Snatch – right', 'Burpee') } },

@@ -1,8 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="96" fill="#111418"/>
-  <circle cx="256" cy="276" r="150" fill="none" stroke="#2c333d" stroke-width="44"/>
-  <path d="M256 126 A150 150 0 0 1 386 351" fill="none" stroke="#ff6b3d" stroke-width="44" stroke-linecap="round"/>
-  <rect x="226" y="62" width="60" height="34" rx="10" fill="#eef1f5"/>
-  <path d="M256 276 L256 186" stroke="#eef1f5" stroke-width="22" stroke-linecap="round"/>
-  <circle cx="256" cy="276" r="18" fill="#eef1f5"/>
+  <defs><clipPath id="c"><rect width="512" height="512" rx="96"/></clipPath></defs>
+  <rect width="512" height="512" rx="96" fill="#140a07"/>
+  <ellipse cx="256" cy="520" rx="300" ry="170" fill="#ff5a1f" opacity=".35" clip-path="url(#c)"/>
+  <circle cx="256" cy="276" r="150" fill="none" stroke="#4a2a1c" stroke-width="44"/>
+  <path d="M256 126 A150 150 0 0 1 386 351" fill="none" stroke="#ff7a1a" stroke-width="44" stroke-linecap="round"/>
+  <rect x="226" y="62" width="60" height="34" rx="10" fill="#f4e6d4"/>
+  <path d="M256 276 L256 186" stroke="#f4e6d4" stroke-width="22" stroke-linecap="round"/>
+  <circle cx="256" cy="276" r="18" fill="#f4e6d4"/>
 </svg>

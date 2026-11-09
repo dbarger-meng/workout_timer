@@ -1,12 +1,12 @@
 {
-  "name": "Interval Timer",
-  "short_name": "Intervals",
+  "name": "Ember Timer",
+  "short_name": "Ember Timer",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#111418",
-  "theme_color": "#111418",
+  "background_color": "#140a07",
+  "theme_color": "#140a07",
   "icons": [
     { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
     { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },

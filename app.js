@@ -59,25 +59,25 @@ const L2 = { totalMin: 20, totalSec: 0, work: 40, rest: 20 };
 const lines = (...a) => a.join('\n');
 
 const PRESETS = [
-  { id: 'preset-full-2', name: 'Iron Circuit · Level 2', cfg: { ...L2, lifts: lines(
+  { id: 'preset-full-2', name: 'Forge of the Ember Tyrant · Level 2', cfg: { ...L2, lifts: lines(
     'Two-hand swing', 'Goblet squat', 'Clean & press – left', 'Clean & press – right',
     'Renegade row', 'Reverse lunge – alternating', 'Push-up', 'Russian twist') } },
-  { id: 'preset-lower-2', name: 'Ground Shaker · Level 2', cfg: { ...L2, lifts: lines(
+  { id: 'preset-lower-2', name: 'Tremor Golem · Level 2', cfg: { ...L2, lifts: lines(
     'Two-hand swing', 'Goblet squat', 'Single-leg deadlift – left', 'Single-leg deadlift – right',
     'Goblet reverse lunge – alternating', 'Sumo deadlift high pull', 'Lateral lunge – alternating',
     'Goblet squat pulse') } },
-  { id: 'preset-upper-2', name: 'Armor Up · Level 2', cfg: { ...L2, lifts: lines(
+  { id: 'preset-upper-2', name: 'Obsidian Pauldrons · Level 2', cfg: { ...L2, lifts: lines(
     'Clean & press – left', 'Clean & press – right', 'Renegade row', 'Push-up',
     'Bent-over row – left', 'Bent-over row – right', 'Half get-up – alternating',
     'Plank pull-through', 'Russian twist', 'Overhead press – alternating') } },
-  { id: 'preset-cond-2', name: 'Swing Shift · Level 2', cfg: { ...L2, lifts: lines(
+  { id: 'preset-cond-2', name: 'Pendulum of the Void · Level 2', cfg: { ...L2, lifts: lines(
     'Two-hand swing', 'Goblet squat thruster', 'Single-arm swing – left', 'Single-arm swing – right',
     'High pull – alternating', 'Snatch – left', 'Snatch – right', 'Burpee') } },
 
   // 5-move circuit from a workout card, both 40 s on / 20 s off for 20 minutes.
-  { id: 'preset-circuit5-1', name: 'Index Card · Level 1', cfg: { ...L2, lifts: lines(
+  { id: 'preset-circuit5-1', name: 'Scroll of the Ashen Pilgrim · Level 1', cfg: { ...L2, lifts: lines(
     'Swings', 'Squat to press', 'Plank row', 'Deadlift', 'Reverse lunge & curl') } },
-  { id: 'preset-circuit5-2', name: 'Index Card · Level 2', cfg: { ...L2, lifts: lines(
+  { id: 'preset-circuit5-2', name: 'Scroll of the Ashen Pilgrim · Level 2', cfg: { ...L2, lifts: lines(
     'Two-handed swing: Snap your hips and let the bell float to chest height.',
     'Goblet squat: Hold the bell at your chest and squat to a controlled depth.',
     'Single-arm row: Hinge forward and pull the bell to your hip.',
@@ -88,25 +88,25 @@ const PRESETS = [
 // AMRAP presets: as many rounds as possible in 20 minutes.
 const AMRAP20 = { mode: 'amrap', totalMin: 20, totalSec: 0, work: 40, rest: 20, lifts: '' };
 PRESETS.push(
-  { id: 'preset-amrap-1', name: 'Open Throttle · Level 1', cfg: { ...AMRAP20, amrap: lines(
+  { id: 'preset-amrap-1', name: 'Warp Core Breach · Level 1', cfg: { ...AMRAP20, amrap: lines(
     'Two-hand swing x 10', 'Goblet squat x 8', 'Push-up x 5', 'Bent-over row x 8', 'Dead bug x 6 / side') } },
-  { id: 'preset-amrap-2', name: 'Open Throttle · Level 2', cfg: { ...AMRAP20, amrap: lines(
+  { id: 'preset-amrap-2', name: 'Warp Core Breach · Level 2', cfg: { ...AMRAP20, amrap: lines(
     'Two-hand swing x 15', 'Goblet squat thruster x 10', 'Renegade row x 6 / side',
     'Clean & press x 5 / side', 'Reverse lunge x 8 / side', 'Burpee x 8') } },
 
   // More Level 2 AMRAPs (20 min each).
-  { id: 'preset-amrap-fullbody-2', name: 'Head to Toe · Level 2', cfg: { ...AMRAP20, amrap: lines(
+  { id: 'preset-amrap-fullbody-2', name: 'Gravy Leviathan · Level 2', cfg: { ...AMRAP20, amrap: lines(
     'Two-hand swing x 20', 'Goblet squat x 12', 'Push-up x 10',
     'Renegade row x 6 / side', 'Reverse lunge x 8 / side') } },
-  { id: 'preset-amrap-legs-2', name: 'Tree Trunks · Level 2', cfg: { ...AMRAP20, amrap: lines(
+  { id: 'preset-amrap-legs-2', name: 'March of the Oakshank · Level 2', cfg: { ...AMRAP20, amrap: lines(
     'Two-hand swing x 20', 'Goblet squat x 15', 'Single-leg deadlift x 8 / side',
     'Goblet reverse lunge x 10 / side', 'Sumo deadlift high pull x 12') } },
-  { id: 'preset-amrap-upper-2', name: 'Steel Spine · Level 2', cfg: { ...AMRAP20, amrap: lines(
+  { id: 'preset-amrap-upper-2', name: 'Spine of the Cinder Wyrm · Level 2', cfg: { ...AMRAP20, amrap: lines(
     'Clean & press x 6 / side', 'Renegade row x 8 / side', 'Push-up x 12',
     'Plank pull-through x 10', 'Russian twist x 20') } },
-  { id: 'preset-amrap-engine-2', name: 'Red Line · Level 2', cfg: { ...AMRAP20, amrap: lines(
+  { id: 'preset-amrap-engine-2', name: 'Cyber-Turkey Uprising · Level 2', cfg: { ...AMRAP20, amrap: lines(
     'Single-arm swing x 10 / side', 'Goblet squat thruster x 10', 'High pull x 8 / side', 'Burpee x 10') } },
-  { id: 'preset-amrap-grind-2', name: 'Slow Burn · Level 2', cfg: { ...AMRAP20, amrap: lines(
+  { id: 'preset-amrap-grind-2', name: 'Lava Gourd Ritual · Level 2', cfg: { ...AMRAP20, amrap: lines(
     'Snatch x 5 / side', 'Half get-up x 2 / side', 'Kettlebell deadlift x 15',
     'Goblet squat x 10', 'Push-up x 10') } },
 );
@@ -540,6 +540,7 @@ function startRun(cfg) {
   run.roundsDone = 0;
   $('roundCount').textContent = '0';
   document.body.classList.toggle('run-amrap', plan.mode === 'amrap');
+  document.body.classList.add('run-active');
   renderAmrapList(plan.amrap || []);
   run.events = buildEvents(plan);
   run.active = true;
@@ -613,7 +614,7 @@ $('roundMinus').addEventListener('click', () => bumpRounds(-1));
 
 function stopRun() {
   figure.set(null);
-  document.body.classList.remove('run-amrap');
+  document.body.classList.remove('run-amrap', 'run-active');
   run.active = false;
   run.paused = false;
   run.stopped = false;
@@ -1038,6 +1039,37 @@ $('backBtn').addEventListener('click', () => { setPhaseClass(null); show('setup'
 writeForm(store.current);
 renderSaved();
 updateSummary();
+
+/* ---------------------------- theme ------------------------------------ */
+// Drifting embers and falling leaves behind the page (skipped when the
+// device asks for reduced motion).
+(function decorate() {
+  try {
+    if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  } catch (_) { /* ignore */ }
+  const layer = document.createElement('div');
+  layer.className = 'ambience';
+  layer.setAttribute('aria-hidden', 'true');
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  for (let i = 0; i < 18; i++) {
+    const e = document.createElement('span');
+    e.className = 'ember';
+    const size = rnd(2, 5);
+    e.style.cssText = `left:${rnd(0, 100)}%;width:${size}px;height:${size}px;` +
+      `animation-duration:${rnd(7, 15)}s;animation-delay:${-rnd(0, 15)}s;--drift:${rnd(-40, 40)}px`;
+    layer.append(e);
+  }
+  const leafColors = ['leaf-a', 'leaf-b', 'leaf-c'];
+  for (let i = 0; i < 7; i++) {
+    const l = document.createElement('span');
+    l.className = 'leaf ' + leafColors[i % 3];
+    const size = rnd(14, 24);
+    l.style.cssText = `left:${rnd(0, 100)}%;width:${size}px;height:${size}px;` +
+      `animation-duration:${rnd(11, 20)}s;animation-delay:${-rnd(0, 20)}s;--sway:${rnd(30, 90)}px`;
+    layer.append(l);
+  }
+  document.body.prepend(layer);
+})();
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   // When a new version is deployed, the new service worker takes over;

@@ -1,4 +1,4 @@
-# Ember Timer
+# Doomsgiving
 
 A phone-friendly interval timer, themed as an autumn harvest in a land of ash and fire, for workouts (e.g. 20 minutes of 40 s on / 20 s off).
 

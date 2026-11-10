@@ -171,7 +171,7 @@ body.phase-done .phase { color: #6fe0a2; }
 .btn.danger { background: #c0392b; border-color: #c0392b; color: #fff; }
 
 /* Movement guide */
-.move-fig { width: min(46vw, 21vh); height: min(46vw, 21vh); margin-top: 6px; will-change: transform; transform: translateZ(0); }
+.move-fig { width: min(72vw, 31vh); height: min(57vw, 24.5vh); margin-top: 6px; will-change: transform; transform: translateZ(0); }
 .fig-limb { fill: none; stroke: var(--text); stroke-width: 3.4; stroke-linecap: round; stroke-linejoin: round; }
 .fig-far { opacity: .45; }
 .fig-head { fill: var(--text); }
@@ -367,3 +367,22 @@ body.phase-done .phase { color: var(--gold); }
 #done .run-center { overflow-y: auto; }
 .check-row { display: flex; gap: 10px; align-items: center; margin: 4px 0 10px; font-size: .95rem; }
 .check-row input { width: 22px; height: 22px; accent-color: var(--ember); flex: none; }
+
+/* Warrior vs. ash gremlin */
+.fig-earth { fill: #2a140c; }
+.fig-rock { fill: #3d1d10; }
+.fig-ground { display: none; }
+.fig-torso { stroke-width: 4.6; }
+.fig-helm { fill: #8a8f98; stroke: #2a2d33; stroke-width: .6; }
+.fig-visor { stroke: #140a07; stroke-width: 1.4; stroke-linecap: round; }
+.fig-crest { fill: none; stroke: #d6331a; stroke-width: 2.6; stroke-linecap: round; }
+.fig-cape { fill: #8f1d0e; opacity: .9; }
+.fig-bell .fig-orb { fill: var(--ember); }
+.fig-bell .fig-handle { fill: none; stroke: #ffb36b; stroke-width: 1.6; }
+.fig-bell .fig-glow { fill: rgba(255, 120, 30, .28); }
+.foe-body { fill: #24120c; stroke: #ff6a1a; stroke-width: .7; stroke-opacity: .55; }
+.foe-horn { fill: #4a2a1c; }
+.foe-arm { fill: none; stroke: #24120c; stroke-width: 2.2; stroke-linecap: round; }
+.foe-eye { fill: #ffd23a; }
+.foe-mouth { fill: none; stroke: #ff8a3a; stroke-width: .8; }
+.fig-spark { fill: #ffe08a; opacity: 0; }

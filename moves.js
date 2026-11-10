@@ -266,31 +266,56 @@ const MOVES = (() => {
 /* -------------------------- animator ----------------------------------- */
 
 class MoveFigure {
+  /* An original fantasy warrior (crested helm, cape, glowing ember
+   * kettlebell) doing the move, while an "ash gremlin" stands opposite and
+   * gets knocked back with a spark on each rep. */
   constructor(svg) {
     this.svg = svg;
     this.move = null;
     this.t0 = performance.now();
     this.raf = 0;
     const NS = 'http://www.w3.org/2000/svg';
-    const mk = (tag, attrs) => {
+    const mk = (tag, attrs, parent = svg) => {
       const el = document.createElementNS(NS, tag);
       for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
-      svg.append(el);
+      parent.append(el);
       return el;
     };
-    svg.setAttribute('viewBox', '-5 -12 110 110');
-    mk('line', { x1: 0, y1: 94, x2: 100, y2: 94, class: 'fig-ground' });
+    svg.setAttribute('viewBox', '-5 -12 138 110');
+
+    // Ground: scorched earth with a few rocks
+    mk('path', { d: 'M-5,94 L133,94 L133,98 L-5,98 Z', class: 'fig-earth' });
+    mk('path', { d: 'M10,94 l3,-2 l4,2 Z M60,94 l2,-1.5 l3,1.5 Z M98,94 l3,-2.5 l4,2.5 Z', class: 'fig-rock' });
+
+    // Foe
+    this.foe = mk('g', { class: 'fig-foe' });
+    mk('path', { d: 'M-4,-17 L-8,-26 L-1.5,-18.5 Z M3,-17 L7,-26 L0.5,-18.5 Z', class: 'foe-horn' }, this.foe);
+    mk('path', { d: 'M-10,0 Q-12,-12 -5,-17.5 Q-0.5,-21.5 4.5,-17.5 Q11,-12 9,0 Q4,-2 0,0 Q-5,-2 -10,0 Z', class: 'foe-body' }, this.foe);
+    mk('path', { d: 'M-9,-8 L-15,-11 M-15,-11 l-1.5,-2.5 M-15,-11 l-2.5,0.5', class: 'foe-arm' }, this.foe);
+    mk('circle', { cx: -5, cy: -12, r: 1.5, class: 'foe-eye' }, this.foe);
+    mk('circle', { cx: -0.5, cy: -12, r: 1.5, class: 'foe-eye' }, this.foe);
+    mk('path', { d: 'M-6.5,-7.5 l1.5,1.2 l1.2,-1.2 l1.2,1.2 l1.2,-1.2', class: 'foe-mouth' }, this.foe);
+
+    this.spark = mk('path', {
+      d: 'M0,-7 L1.8,-1.8 L7,0 L1.8,1.8 L0,7 L-1.8,1.8 L-7,0 L-1.8,-1.8 Z',
+      class: 'fig-spark',
+    });
+
+    // Warrior (back to front)
+    this.cape = mk('path', { class: 'fig-cape' });
     this.farLeg = mk('polyline', { class: 'fig-limb fig-far' });
     this.farArm = mk('polyline', { class: 'fig-limb fig-far' });
-    this.torso = mk('line', { class: 'fig-limb' });
+    this.torso = mk('line', { class: 'fig-limb fig-torso' });
     this.nearLeg = mk('polyline', { class: 'fig-limb' });
-    this.head = mk('circle', { r: 6, class: 'fig-head' });
+    this.headG = mk('g', {});
+    mk('circle', { r: 6, class: 'fig-head' }, this.headG);
+    mk('path', { d: 'M-6.8,1.5 A6.8,6.8 0 0 1 6.8,1.5 L6.8,3.2 L-6.8,3.2 Z', class: 'fig-helm' }, this.headG);
+    mk('path', { d: 'M1.5,0.2 L6.8,0.2', class: 'fig-visor' }, this.headG);
+    mk('path', { d: 'M-5,-5 Q-1,-12.5 6,-8', class: 'fig-crest' }, this.headG);
     this.bell = mk('g', { class: 'fig-bell' });
-    const handle = document.createElementNS(NS, 'circle');
-    handle.setAttribute('r', 2.6); handle.setAttribute('cy', -3.6); handle.setAttribute('class', 'fig-handle');
-    const body = document.createElementNS(NS, 'circle');
-    body.setAttribute('r', 4.4);
-    this.bell.append(handle, body);
+    mk('circle', { r: 8, class: 'fig-glow' }, this.bell);
+    mk('circle', { r: 2.6, cy: -3.6, class: 'fig-handle' }, this.bell);
+    mk('circle', { r: 4.4, class: 'fig-orb' }, this.bell);
     this.nearArm = mk('polyline', { class: 'fig-limb' });
   }
 
@@ -317,7 +342,8 @@ class MoveFigure {
   draw(now) {
     const m = this.move;
     const n = m.frames.length;
-    const t = ((now - this.t0) / 1000) / m.step;
+    const secs = (now - this.t0) / 1000;
+    const t = secs / m.step;
     const i = Math.floor(t) % n;
     const f = t - Math.floor(t);
     // Ease in-out with a short hold at each pose.
@@ -336,7 +362,18 @@ class MoveFigure {
     this.nearArm.setAttribute('points', pt('neck', 'e1', 'h1'));
     this.torso.setAttribute('x1', neck[0]); this.torso.setAttribute('y1', neck[1]);
     this.torso.setAttribute('x2', hip[0]); this.torso.setAttribute('y2', hip[1]);
-    this.head.setAttribute('cx', head[0]); this.head.setAttribute('cy', head[1]);
+
+    // Helm turns with the body (upright, plank, lying).
+    const ang = Math.atan2(head[1] - hip[1], head[0] - hip[0]) * 180 / Math.PI + 90;
+    this.headG.setAttribute('transform', `translate(${head[0]},${head[1]}) rotate(${ang})`);
+
+    // Cape hangs from the shoulders along the back and flutters.
+    const fl = Math.sin(secs * 5) * 1.6;
+    const dx = hip[0] - neck[0], dy = hip[1] - neck[1];
+    const end = [hip[0] + dx * 0.25 - 4 + fl, hip[1] + dy * 0.25 + 3];
+    const ctl = [(neck[0] + hip[0]) / 2 - 7 + fl, (neck[1] + hip[1]) / 2 + 2];
+    this.cape.setAttribute('d', `M${neck[0] - 1},${neck[1]} Q${ctl[0]},${ctl[1]} ${end[0]},${end[1]} ` +
+      `L${end[0] + 4},${end[1] + 1} Q${ctl[0] + 6},${ctl[1]} ${neck[0] + 1},${neck[1] + 1} Z`);
 
     if (m.bell) {
       const h = p(m.bell), off = p('b');
@@ -345,5 +382,13 @@ class MoveFigure {
     } else {
       this.bell.style.display = 'none';
     }
+
+    // The rep "lands" as the warrior reaches the second pose.
+    const hit = i === 0 ? e : (i === 1 ? Math.max(0, 1 - e * 1.6) : 0);
+    const bob = Math.sin(secs * 3.2) * 0.8;
+    this.foe.setAttribute('transform', `translate(${117 + hit * 9},${94 + bob * (1 - hit)}) rotate(${hit * 18})`);
+    const sp = Math.max(0, (hit - 0.75) * 4);
+    this.spark.style.opacity = sp.toFixed(2);
+    this.spark.setAttribute('transform', `translate(${104 + hit * 6},${78}) scale(${0.6 + sp * 0.7}) rotate(${secs * 200})`);
   }
 }

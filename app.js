@@ -40,6 +40,7 @@ function loadStore() {
         volume: typeof s.volume === 'number' ? s.volume : 0.8,
         presetLevel: s.presetLevel === 2 ? 2 : 1,
         quoteVoice: s.quoteVoice !== false,
+        duckMusic: s.duckMusic !== false,
         lastQuote: typeof s.lastQuote === 'string' ? s.lastQuote : '',
       };
     }
@@ -540,6 +541,7 @@ function startRun(cfg) {
   ensureAudio();
   run.plan = plan;
   preloadQuote();
+  if (store.quoteVoice !== false && store.duckMusic !== false) unlockDucker();
   run.roundsDone = 0;
   $('roundCount').textContent = '0';
   document.body.classList.toggle('run-amrap', plan.mode === 'amrap');
@@ -670,24 +672,87 @@ function loadQuote(pick) {
     .catch(() => null);
 }
 
-// Played through Web Audio (like the beeps) so it mixes over music.
+/* Dimming other apps' music while the quote plays.
+ * A web page can't set Spotify's volume, but it can ask the phone to "duck"
+ * other audio the way a navigation prompt does:
+ *  - iPhone/Safari: switch the page's audio session to "transient".
+ *  - Android: play a short (< 5 s), near-silent looping clip in an <audio>
+ *    element. Chrome-based browsers treat short media as a transient sound
+ *    and ask Android to lower other apps' audio until it stops.
+ * The voice itself is played through Web Audio on its own louder path. */
+const ducker = new Audio('duck.mp3');
+ducker.loop = true;
+ducker.preload = 'auto';
+ducker.setAttribute('playsinline', '');
+let duckOn = false;
+let duckTimer = 0;
+
+// Some browsers only let a media element play later if it was first started
+// from a tap; do that silently (muted) when Start is pressed.
+function unlockDucker() {
+  try {
+    ducker.muted = true;
+    const pr = ducker.play();
+    const done = () => { ducker.pause(); ducker.currentTime = 0; ducker.muted = false; };
+    if (pr && pr.then) pr.then(done, () => { ducker.muted = false; }); else done();
+  } catch (_) { /* ignore */ }
+}
+
+function startDuck() {
+  if (store.duckMusic === false) return;
+  clearTimeout(duckTimer);
+  duckOn = true;
+  try { if (navigator.audioSession) navigator.audioSession.type = 'transient'; } catch (_) {}
+  try { ducker.muted = false; ducker.currentTime = 0; const pr = ducker.play(); if (pr && pr.catch) pr.catch(() => {}); } catch (_) {}
+}
+
+function stopDuck(after = 0) {
+  clearTimeout(duckTimer);
+  duckTimer = setTimeout(() => {
+    if (!duckOn) return;
+    duckOn = false;
+    try { ducker.pause(); } catch (_) {}
+    try { if (navigator.audioSession) navigator.audioSession.type = 'ambient'; } catch (_) {}
+  }, after);
+}
+
+// The quote gets its own boosted path with a limiter so it can sit above
+// music without clipping.
+let quoteOut = null;
+function quoteOutput() {
+  if (!quoteOut) {
+    const g = ctx.createGain();
+    const lim = ctx.createDynamicsCompressor();
+    lim.threshold.value = -3; lim.knee.value = 0; lim.ratio.value = 20;
+    lim.attack.value = 0.002; lim.release.value = 0.1;
+    g.connect(lim); lim.connect(ctx.destination);
+    quoteOut = g;
+  }
+  quoteOut.gain.value = Math.min(2, Math.max(0.6, store.volume) * 1.6);
+  return quoteOut;
+}
+
 function playQuote(delay = 0) {
   if (!ctx || !quote.loading) return;
   quote.loading.then((buf) => {
     if (!buf || $('done').hidden) return;
     stopQuote();
     if (ctx.state !== 'running') ctx.resume().catch(() => {});
+    startDuck();
     const src = ctx.createBufferSource();
     src.buffer = buf;
-    src.connect(master);
+    src.connect(quoteOutput());
     src.start(ctx.currentTime + delay);
-    src.onended = () => { if (quote.src === src) quote.src = null; };
+    src.onended = () => {
+      if (quote.src === src) { quote.src = null; stopDuck(600); }
+    };
     quote.src = src;
   });
 }
 
 function stopQuote() {
-  if (quote.src) { try { quote.src.stop(); } catch (_) {} quote.src = null; }
+  if (quote.src) { const s = quote.src; quote.src = null; try { s.stop(); } catch (_) {} }
+  stopDuck(0);
 }
 
 function finishRun() {
@@ -1110,6 +1175,8 @@ $('quoteReplay').addEventListener('click', () => {
 });
 $('quoteVoice').checked = store.quoteVoice !== false;
 $('quoteVoice').addEventListener('change', (e) => { store.quoteVoice = e.target.checked; persist(); });
+$('duckMusic').checked = store.duckMusic !== false;
+$('duckMusic').addEventListener('change', (e) => { store.duckMusic = e.target.checked; persist(); });
 
 /* ---------------------------- init ------------------------------------- */
 

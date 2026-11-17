@@ -680,21 +680,35 @@ function loadQuote(pick) {
  *    element. Chrome-based browsers treat short media as a transient sound
  *    and ask Android to lower other apps' audio until it stops.
  * The voice itself is played through Web Audio on its own louder path. */
-const ducker = new Audio('duck.mp3');
+const DUCK_SRC = 'duck.mp3';
+const ducker = new Audio();
 ducker.loop = true;
 ducker.preload = 'auto';
 ducker.setAttribute('playsinline', '');
 let duckOn = false;
 let duckTimer = 0;
 
+// Fully unload the clip. On Android a merely *paused* player keeps its claim
+// on the audio, which leaves Spotify dimmed; unloading it releases that claim
+// so other apps return to their normal volume.
+function releaseDucker() {
+  try { ducker.pause(); } catch (_) {}
+  try { ducker.removeAttribute('src'); ducker.load(); } catch (_) {}
+}
+
+function loadDucker() {
+  if (!ducker.getAttribute('src')) ducker.src = DUCK_SRC;
+}
+
 // Some browsers only let a media element play later if it was first started
-// from a tap; do that silently (muted) when Start is pressed.
+// from a tap; do that silently (muted) when Start is pressed, then unload it.
 function unlockDucker() {
   try {
+    loadDucker();
     ducker.muted = true;
     const pr = ducker.play();
-    const done = () => { ducker.pause(); ducker.currentTime = 0; ducker.muted = false; };
-    if (pr && pr.then) pr.then(done, () => { ducker.muted = false; }); else done();
+    const done = () => { releaseDucker(); ducker.muted = false; };
+    if (pr && pr.then) pr.then(done, done); else done();
   } catch (_) { /* ignore */ }
 }
 
@@ -703,7 +717,12 @@ function startDuck() {
   clearTimeout(duckTimer);
   duckOn = true;
   try { if (navigator.audioSession) navigator.audioSession.type = 'transient'; } catch (_) {}
-  try { ducker.muted = false; ducker.currentTime = 0; const pr = ducker.play(); if (pr && pr.catch) pr.catch(() => {}); } catch (_) {}
+  try {
+    loadDucker();
+    ducker.muted = false;
+    const pr = ducker.play();
+    if (pr && pr.catch) pr.catch(() => {});
+  } catch (_) {}
 }
 
 function stopDuck(after = 0) {
@@ -711,10 +730,19 @@ function stopDuck(after = 0) {
   duckTimer = setTimeout(() => {
     if (!duckOn) return;
     duckOn = false;
-    try { ducker.pause(); } catch (_) {}
+    releaseDucker();
+    // iPhone: go back to mixing with other audio, and pause our audio engine
+    // so iOS ends our session and lets other apps come back up. It resumes on
+    // the next Start, Test or "Hear it again".
     try { if (navigator.audioSession) navigator.audioSession.type = 'ambient'; } catch (_) {}
+    if (ctx && !run.active && ctx.state === 'running') ctx.suspend().catch(() => {});
   }, after);
 }
+
+// If the page is hidden mid-quote, don't leave other apps dimmed.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden' && duckOn) { stopQuote(); }
+});
 
 // The quote gets its own boosted path with a limiter so it can sit above
 // music without clipping.
